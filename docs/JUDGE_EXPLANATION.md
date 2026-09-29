@@ -1,0 +1,21 @@
+# Judge Explanation
+
+Direct answers to the questions this kind of submission should expect. See `docs/SUBMISSION_ARCHITECTURE.md` for the underlying mechanics these answers refer to.
+
+---
+
+## Why does this need GenLayer?
+
+Determining a real-world weather fact requires two things a normal smart contract cannot do: making an outbound web request, and having independent parties agree on what that request returned *without* trusting a single party to report it. GenLayer's non-deterministic execution (`gl.nondet.web.get`/`.render`) lets the contract itself retrieve evidence, and its Optimistic Democracy consensus (`gl.vm.run_nondet` leader/validator agreement) means that evidence only becomes on-chain state once independent validators, each retrieving it themselves, agree. Neither capability exists in a deterministic-only contract, on any chain. Nothing about WeatherResolve's actual decision logic (median, tolerance, threshold comparison) is hard — the hard part, and the part that requires GenLayer specifically, is getting real-world evidence into the contract in a way that doesn't collapse to "just trust this one oracle."
+
+## Why is this more than a weather API?
+
+A weather API wrapper takes one provider's number and calls it truth. WeatherResolve is built around the opposite assumption: any single source can be wrong, misconfigured, or unavailable, so it never accepts a value from a single source. A source policy configures a minimum number of independent sources, a disagreement tolerance, and explicit failure behavior; the resolution algorithm actively checks that each source's response is *about the right place and the right date* (via a generic Location Resolution Profile, not a hardcoded per-provider parser) before even looking at the number. If sources disagree, or too few are valid, or none confirm the location, the result is `UNRESOLVED` — an explicit, honest outcome a thin API wrapper has no way to express, because an API wrapper has nothing to disagree with. The Evidence Explorer exists specifically to make this difference visible: it shows the sources checked, not just a final number.
+
+## Why is WeatherResolve reusable infrastructure?
+
+WeatherResolve resolves and stores an **observation** — "rainfall in Lagos on this date was 12.30mm" — completely independent of what any consumer does with that fact. WeatherCover asks "is it below 15mm?" but a prediction market could ask "was it above 20mm?", an agriculture contract could ask "was there a drought?", and a logistics contract could ask "was there a weather delay?" — all three could read the exact same Observation Registry entry without WeatherResolve knowing any of them exist. The event ID is a deterministic hash of (location, metric, date, source policy), so any number of consumers requesting the same underlying fact automatically deduplicate onto one resolution — the tenth application to ask about that Lagos observation causes zero new retrieval or consensus work. That is the definition of infrastructure: WeatherCover is one specific thing built on it, not the thing itself. `contracts/weather_resolve_cover.py` keeps this boundary real in code, not just in naming — WeatherCover's methods only ever *read* WeatherResolve's storage, never write to it.
+
+## Why is the Evidence Explorer important?
+
+Because the entire credibility claim of this project — "we don't trust a single source" — is worthless if it's not independently checkable. The Evidence Explorer shows every source that was queried, the exact retrieval method used (FETCH vs. RENDER), the classification the contract assigned it (`AVAILABLE`, `WRONG_LOCATION`, `TIMEOUT`, etc.), how its location was verified (canonical name, alias, country, or coordinate match — stated explicitly, not just a checkmark), its normalized value, and the overall consensus result. A user, or a judge, doesn't have to take "GenLayer verified this" on faith — they can see which three sources were checked, that they agreed within tolerance, and that the median became the resolved value. It is the difference between a black-box oracle and infrastructure that shows its work, and it is deliberately built as the most detailed screen in the product rather than an afterthought.

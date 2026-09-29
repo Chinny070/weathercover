@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Contract test/deploy scratch (gltest's own working directory)
+artifacts/
+
+# Frontend build/local-env artifacts (frontend/ has its own .gitignore too;
+# repeated here so the root .gitignore is correct on its own)
+node_modules/
+.next/
+*.tsbuildinfo
+.env
+.env.local
+.env*.local

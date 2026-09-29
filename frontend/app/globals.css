@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+ * WeatherCover -- design tokens.
+ * Selected template: Modern Treasury (DESIGN.md), adapted per
+ * ../docs/FRONTEND_DESIGN_DECISION.md -- "treasury ledger on graph paper":
+ * a white financial canvas, faint grid lines, one green accent reserved for
+ * confirmed/verified states, no red, no gradients, no drop shadows.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* Surfaces */
+  --wc-paper: #ffffff;
+  --wc-ice-panel: #f0f8f9;
+  --wc-forest-ledger: #0c221d;
+
+  /* Text */
+  --wc-ink: #151515;
+  --wc-graphite: #424242;
+  --wc-steel: #706f6f;
+
+  /* Structure */
+  --wc-rule-gray: #dcdcdc;
+  --wc-edge-gray: #cbcac8;
+
+  /* The one confirmed/verified accent -- reserved exclusively for
+   * RESOLVED / AVAILABLE / TRIGGERED / consensus / connector lines. */
+  --wc-network-green: #29735c;
+  --wc-mint-subscription: #bae0cf;
+
+  /* UNRESOLVED gets its own distinct, non-alarm tone -- an honest
+   * infrastructure outcome, not an error (see design decision doc sec 3/9). */
+  --wc-plum-ledger: #543b4e;
+
+  /* Technical/monospace accent for raw values, hashes, status codes. */
+  --wc-ledger-brown: #7b5953;
+
+  /* Typography */
+  --wc-font-display: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --wc-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --wc-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Spacing (4px base grid, per design decision doc sec 5) */
+  --wc-space-section: 48px;
+  --wc-space-card: 24px;
+  --wc-space-element: 8px;
+
+  color-scheme: light;
+}
+
+html {
+  background: var(--wc-paper);
+}
+
+body {
+  background: var(--wc-paper);
+  color: var(--wc-ink);
+  font-family: var(--wc-font-sans);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--wc-mint-subscription);
+  color: var(--wc-ink);
+}
+
+/* Graph-paper background -- used only where the product is making a
+ * "this is measured, this is precise" claim (landing hero, Evidence
+ * Explorer). Never on the dashboard or forms, where it would be noise. */
+.wc-graph-paper {
+  background-image:
+    linear-gradient(var(--wc-rule-gray) 1px, transparent 1px),
+    linear-gradient(90deg, var(--wc-rule-gray) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-color: var(--wc-paper);
+}
+
+.wc-mono {
+  font-family: var(--wc-font-mono);
+  font-variant-ligatures: none;
+}
+
+.wc-display {
+  font-family: var(--wc-font-display);
+  font-weight: 450;
+}
+
+.wc-card {
+  background: var(--wc-paper);
+  border: 1px solid var(--wc-rule-gray);
+  border-radius: 8px;
+  padding: var(--wc-space-card);
+}
+
+.wc-panel {
+  background: var(--wc-ice-panel);
+  border: 1px solid var(--wc-edge-gray);
+  border-radius: 8px;
+  padding: var(--wc-space-card);
+}
+
+.wc-rule {
+  border-color: var(--wc-rule-gray);
+}
+
+/* Status dots -- color communicates meaning on an otherwise-neutral card,
+ * never by recoloring the whole card (design decision doc sec 6). */
+.wc-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  margin-right: 6px;
+}
+.wc-dot-confirmed {
+  background: var(--wc-network-green);
+}
+.wc-dot-unresolved {
+  background: var(--wc-plum-ledger);
+}
+.wc-dot-neutral {
+  background: var(--wc-steel);
+}
+
+.wc-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--wc-font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--wc-edge-gray);
+}
+
+.wc-btn-primary {
+  background: var(--wc-ink);
+  color: var(--wc-paper);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-family: var(--wc-font-sans);
+  font-weight: 500;
+  border: 1px solid var(--wc-ink);
+}
+.wc-btn-primary:disabled {
+  background: var(--wc-steel);
+  border-color: var(--wc-steel);
+  cursor: not-allowed;
+}
+
+.wc-btn-secondary {
+  background: transparent;
+  color: var(--wc-ink);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-family: var(--wc-font-sans);
+  font-weight: 500;
+  border: 1px solid var(--wc-ink);
+}
+
+/* Flow-diagram connector line -- the literal "money flows mapped with
+ * fine lines" pattern from the source system, repurposed for the policy
+ * lifecycle. */
+.wc-connector {
+  width: 1px;
+  height: 32px;
+  background: var(--wc-network-green);
+  margin: 0 auto;
+}
+
+input.wc-input,
+select.wc-input {
+  background: var(--wc-paper);
+  border: 1px solid var(--wc-edge-gray);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-family: var(--wc-font-sans);
+  color: var(--wc-ink);
+  width: 100%;
+}
+input.wc-input:focus,
+select.wc-input:focus {
+  outline: 2px solid var(--wc-network-green);
+  outline-offset: 1px;
+}
+
+.wc-btn-primary,
+.wc-btn-secondary {
+  transition: opacity 150ms ease, background-color 150ms ease, border-color 150ms ease, transform 100ms ease;
+}
+.wc-btn-primary:active:not(:disabled),
+.wc-btn-secondary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.wc-card {
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+/* ---------------------------------------------------------------------------
+ * Subtle premium interactions -- transitions, timeline animation, and
+ * evidence "reveal" states. Kept restrained per the design decision doc:
+ * short durations, no bounce/elastic easing, no motion on the graph-paper
+ * canvas itself.
+ * ------------------------------------------------------------------------- */
+
+@keyframes wc-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.wc-pulse {
+  animation: wc-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes wc-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.wc-fade-up {
+  animation: wc-fade-up 320ms ease-out both;
+}
+
+@keyframes wc-connector-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+.wc-connector-animated {
+  transform-origin: top;
+  animation: wc-connector-grow 260ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wc-pulse,
+  .wc-fade-up,
+  .wc-connector-animated {
+    animation: none;
+  }
+}
