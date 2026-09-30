@@ -58,6 +58,64 @@ Point at the TRIGGERED result and the `+1000 simulated units` credit line.
 
 ---
 
+## Verified payout lifecycle
+
+This is the exact mechanism behind "TRIGGERED → payout credited" in the 1:45–2:30 section above, spelled out as its own flow and independently re-verified against a second live StudioNet deployment (`0x92A1DbA2D2F0E5707ee90f7EF4BB5aC704C171A0`) in a dedicated post-deployment audit. Useful if a judge asks "how does the payout actually work" directly.
+
+```
+Observation resolved
+        ↓
+Policy evaluated
+        ↓
+   TRIGGERED
+        ↓
+Simulated payout credited
+        ↓
+Balance updated
+```
+
+Each arrow is one real, separately-callable contract step — `resolve_weather_event` → `cover_evaluate_policy` → (contract-internal condition check) → `credited_amount` set → `simulated_balances[owner]` incremented — read back with `cover_get_policy` and `cover_get_simulated_balance`. Nothing here is simulated in the frontend layer; the crediting happens inside the contract itself.
+
+### TRIGGERED — payout credited
+
+Policy `cover-1`: `RAIN_24H BELOW 15.00mm` against a real resolved observation of `12.30mm`.
+
+| Step | Result |
+|---|---|
+| Observation resolved | `RESOLVED`, `value_mm100: 1230` |
+| Policy evaluated | `cover_evaluate_policy(cover-1)` — tx `0xdb5e31f87ce3d7eb61d7e647ddd1e5a2d1ef60b8c5564d1b2b1d640962c52531`, `ACCEPTED` |
+| Result | `status: "TRIGGERED"` (1230 < 1500) |
+| Payout credited | `credited_amount: 1000` (== configured `simulated_payout`) |
+| Balance updated | simulated balance for the owner: `0 → 1000` |
+
+### NOT_TRIGGERED — no payout
+
+Policy `cover-2`: `RAIN_24H BELOW 10.00mm` against the same `12.30mm` observation.
+
+| Step | Result |
+|---|---|
+| Observation resolved | `RESOLVED`, `value_mm100: 1230` |
+| Policy evaluated | `cover_evaluate_policy(cover-2)` — tx `0x6940f2521caa08cbce982bc6c45fe32b2d9eddac8b91e2f4afb1d4f39a5d0324`, `ACCEPTED` |
+| Result | `status: "NOT_TRIGGERED"` (1230 is not < 1000) |
+| Payout credited | `credited_amount: 0` |
+| Balance updated | unchanged — stayed at `1000` (from the TRIGGERED case above; a fresh wallet would stay at `0`) |
+
+### UNRESOLVED — no payout
+
+Policy `cover-3`: linked to an event whose only configured source was deliberately queried at the wrong coordinates, correctly resolving `UNRESOLVED`.
+
+| Step | Result |
+|---|---|
+| Observation resolved | `UNRESOLVED`, `resolution_reason: "INSUFFICIENT_SOURCES"` |
+| Policy evaluated | `cover_evaluate_policy(cover-3)` — tx `0x39d59d36984142e005abb661c93337b72d839662e455773675e94c9e423d9ab7`, `ACCEPTED` |
+| Result | `status: "UNRESOLVED"` — no condition check is even attempted while the underlying observation isn't `RESOLVED` |
+| Payout credited | `credited_amount: 0` — no credit, no denial |
+| Balance updated | unchanged |
+
+**What this proves**: the balance only ever moved once, on the one policy that genuinely satisfied its condition against a genuinely resolved observation — and stayed untouched through both the NOT_TRIGGERED and UNRESOLVED cases evaluated immediately after. The payout path is real and conditional, not decorative.
+
+---
+
 ## If something doesn't load live
 
 Every screen above has a static fallback: the exact JSON each page renders is reproducible with `genlayer call <contract> <method> --args ...` (commands in `docs/DEPLOYMENT.md` §4b) and can be read aloud from a terminal if the frontend or network hiccups mid-demo.
