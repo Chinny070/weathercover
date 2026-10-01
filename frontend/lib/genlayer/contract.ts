@@ -197,4 +197,47 @@ export async function getTransaction(hash: TransactionHash, client: AnyClient = 
   return client.getTransaction({ hash });
 }
 
+export class TransactionFinalityTimeoutError extends Error {
+  constructor(readonly statusName: string | null) {
+    super(`Still ${statusName ?? "in an unknown state"}; finality was not reached before the wait timed out. No final-state read was performed.`);
+    this.name = "TransactionFinalityTimeoutError";
+  }
+}
+
+/** Wait for true finality. ACCEPTED is surfaced to the UI, never treated as
+ * completion. After either wait timeout, inspect the actual transaction and
+ * retain its real state instead of inferring success from readability. */
+export async function waitForFinalizedTransaction(
+  client: AnyClient,
+  hash: TransactionHash,
+  opts: { retries?: number; interval?: number; onAccepted?: (tx: Awaited<ReturnType<typeof getTransaction>>) => void } = {},
+) {
+  const retries = opts.retries ?? 120;
+  const interval = opts.interval ?? 2000;
+  try {
+    await waitForStatus(client, hash, TransactionStatus.ACCEPTED, { retries, interval });
+  } catch {
+    // Inspect below: it may still be pending, already accepted, terminal, or finalized.
+  }
+
+  let tx = await getTransaction(hash, client);
+  if (tx.statusName === TransactionStatus.FINALIZED) return tx;
+  if (tx.statusName === TransactionStatus.ACCEPTED) opts.onAccepted?.(tx);
+  if ([TransactionStatus.CANCELED, TransactionStatus.UNDETERMINED, TransactionStatus.LEADER_TIMEOUT, TransactionStatus.VALIDATORS_TIMEOUT].includes(tx.statusName as TransactionStatus)) {
+    throw new Error(`Transaction ended in ${tx.statusName}${tx.txExecutionResultName ? ` (${tx.txExecutionResultName})` : ""}.`);
+  }
+
+  try {
+    await waitForStatus(client, hash, TransactionStatus.FINALIZED, { retries, interval });
+  } catch {
+    // Re-read below to distinguish a timeout from a terminal result.
+  }
+  tx = await getTransaction(hash, client);
+  if (tx.statusName === TransactionStatus.FINALIZED) return tx;
+  if ([TransactionStatus.CANCELED, TransactionStatus.UNDETERMINED, TransactionStatus.LEADER_TIMEOUT, TransactionStatus.VALIDATORS_TIMEOUT].includes(tx.statusName as TransactionStatus)) {
+    throw new Error(`Transaction ended in ${tx.statusName}${tx.txExecutionResultName ? ` (${tx.txExecutionResultName})` : ""}.`);
+  }
+  throw new TransactionFinalityTimeoutError(tx.statusName ?? null);
+}
+
 export { TransactionStatus };

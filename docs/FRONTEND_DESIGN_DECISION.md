@@ -86,7 +86,7 @@ Rule carried over directly: never set display headlines above weight 450–500. 
 - **Buttons**: Filled Ink with Paper text for primary actions (create policy, evaluate); outlined Ink for secondary; 2–4px radius, 8px×16px padding, per source guideline. No gradient buttons anywhere.
 - **Flow diagrams** (the `↓` sequences in the brief): rendered as vertically-stacked labeled nodes connected by thin Network Green connector lines — a direct, literal application of the source system's own "payment flows mapped with fine lines, labeled nodes" pattern to WeatherCover's policy lifecycle instead of a payment lifecycle.
 - **Evidence source rows**: table-like list, each row a hairline-bordered cell on the graph-paper canvas — Source name (Manrope), Retrieval method (monospace badge: `FETCH`/`RENDER`), Status (colored badge), Normalized value (monospace, right-aligned like a ledger figure).
-- **Transaction/request state indicator**: a small four-state inline badge — `Submitted` (Steel, pending icon) → `Pending` (Graphite, spinner) → `Finalized` (Network Green, check) → `Failed` (Plum Ledger, x) — same visual family as the RESOLVED/UNRESOLVED status badges, so the user learns one badge language for the whole app.
+- **Transaction/request state indicator**: inline state progresses `Submitted` → `Pending` → `Accepted — waiting for GenLayer finality…` (all visibly in progress) → `Finalized` (Network Green, only after actual `FINALIZED`) or `Failed` (Plum Ledger). This shares the RESOLVED/UNRESOLVED badge family while keeping acceptance distinct from finality.
 
 ---
 

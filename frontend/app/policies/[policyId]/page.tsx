@@ -128,9 +128,9 @@ export default function PolicyResultPage({ params }: { params: Promise<{ policyI
             <button
               className="wc-btn-primary flex items-center justify-center gap-2"
               onClick={() => run((c) => evaluateCoverPolicy(c, policyId), client)}
-              disabled={snapshot.phase === "submitted" || snapshot.phase === "pending"}
+              disabled={snapshot.phase === "submitted" || snapshot.phase === "pending" || snapshot.phase === "accepted"}
             >
-              {snapshot.phase === "submitted" || snapshot.phase === "pending" ? (
+              {snapshot.phase === "submitted" || snapshot.phase === "pending" || snapshot.phase === "accepted" ? (
                 <span className="wc-dot wc-pulse" style={{ background: "var(--wc-paper)", margin: 0 }} />
               ) : null}
               Evaluate Policy

@@ -70,7 +70,7 @@ Requires `frontend/.env.local` pointed at your deployed address (§6 of `MANUAL_
 - [ ] **Observation details display** — the page shows the resolved value (or UNRESOLVED reason), the 4-stage verification flow, every configured source with its retrieval status and location/date match detail, and the resolution/consensus summary — cross-check against the CLI's `observation_get_observation` output; they must match exactly.
 - [ ] **Create policy flow works** — with a wallet connected, submit the Create Policy form; watch it progress through event-check → (event creation if needed) → resolution → policy creation, then land on the new policy's result page.
 - [ ] **Evaluate policy transaction works** — on a `PENDING`/`UNRESOLVED` policy's result page, click "Evaluate Policy"; it should complete and update the displayed status.
-- [ ] **Transaction states display correctly** — during both write flows above, confirm you visibly see, in order: **Submitted** (wallet signature prompt) → **Pending** (broadcast, tx hash shown) → **Finalized** (green if accepted) or **Failed** (plum, with an error message) — never a silent hang with no state shown.
+- [ ] **Transaction states display correctly** — confirm **Submitted** → **Pending** → optionally **Accepted — waiting for GenLayer finality…** → **Finalized** (green only after true `FINALIZED`) or **Failed**. Accepted and timeout states must remain in progress, never appear finalized.
 
 ---
 

@@ -23,13 +23,13 @@ Frontend calls:
 genlayer-js writes to contract method:
   event_create_weather_event(location, metric, observation_period, source_policy_id)
         ↓
-Transaction submitted -- useTxAction tracks Submitted -> Pending
+Transaction submitted
         ↓
-waitForStatus() polls until ACCEPTED/FINALIZED
+waitForFinalizedTransaction() observes ACCEPTED as in-progress, then waits for actual FINALIZED
         ↓
 Contract stores a new WeatherEvent (status: PENDING) in `self.events`
         ↓
-UI shows "Requesting the weather event..." step label while in flight
+Frontend confirms the event through a latest-final `eventExists()` read before dependent writes
 ```
 
 Code: `frontend/app/create-policy/page.tsx` (`handleSubmit`, "creating-event" step) → `frontend/lib/genlayer/contract.ts` (`createWeatherEvent`) → `contracts/weather_resolve_cover.py` (`event_create_weather_event`, ~line 1040).
@@ -82,8 +82,9 @@ Frontend calls:
 genlayer-js writes to contract method:
   cover_evaluate_policy(policy_id)
         ↓
-Transaction submitted -- useTxAction tracks Submitted -> Pending ->
-Finalized, with a pulsing indicator on the button while in flight
+Transaction submitted -> Pending -> Accepted (still in progress) -> actual FINALIZED
+        ↓
+Only after FINALIZED, re-read the updated policy from the latest-final contract state
         ↓
 Contract internally: reads the linked Observation from
 `self.observations`; if not RESOLVED, sets policy status to

@@ -12,10 +12,10 @@ import {
   resolveWeatherEvent,
   createCoverPolicy,
   listPolicyIdsByOwner,
-  waitForStatus,
-  getTransaction,
+  TransactionFinalityTimeoutError,
+  waitForFinalizedTransaction,
+  getResolutionStatus,
 } from "@/lib/genlayer/contract";
-import { TransactionStatus } from "genlayer-js/types";
 import {
   AVAILABLE_SOURCE_POLICIES,
   KNOWN_LOCATION_ID,
@@ -31,6 +31,8 @@ type Step =
   | "creating-event"
   | "resolving-event"
   | "creating-policy"
+  | "pending"
+  | "accepted"
   | "done"
   | "error";
 
@@ -42,6 +44,8 @@ const STEP_LABEL: Record<Step, string> = {
   "creating-event": "Requesting the weather event on WeatherResolve (signature required)…",
   "resolving-event": "Resolving real-world evidence for this event (signature required)…",
   "creating-policy": "Creating your WeatherCover policy (signature required)…",
+  pending: "Transaction submitted — pending GenLayer consensus…",
+  accepted: "Accepted — waiting for GenLayer finality…",
   done: "Policy created.",
   error: "Something went wrong.",
 };
@@ -66,6 +70,7 @@ export default function CreatePolicyPage() {
   const [alsoResolve, setAlsoResolve] = useState(true);
 
   const [step, setStep] = useState<Step>("idle");
+  const [activeOperation, setActiveOperation] = useState("Transaction");
   const [error, setError] = useState<string | null>(null);
 
   const busy = step !== "idle" && step !== "done" && step !== "error";
@@ -122,7 +127,15 @@ export default function CreatePolicyPage() {
           lonNum < 0,
           Math.round(radiusNum),
         );
-        await waitForStatus(client, registerHash, TransactionStatus.ACCEPTED, { retries: 120, interval: 2000 }).catch(() => {});
+        setActiveOperation("Location registration");
+        setStep("pending");
+        const registerTx = await waitForFinalizedTransaction(client, registerHash, {
+          retries: 120,
+          interval: 2000,
+          onAccepted: () => setStep("accepted"),
+        });
+        if (registerTx.txExecutionResultName === "FINISHED_WITH_ERROR") throw new Error("Location registration finalized with a failed execution.");
+        if (!(await locationExists(location))) throw new Error("Location registration finalized, but the latest-final state does not contain the location yet.");
       }
 
       setStep("checking-event");
@@ -132,33 +145,63 @@ export default function CreatePolicyPage() {
       if (!exists) {
         setStep("creating-event");
         const createHash = await createWeatherEvent(client, location, KNOWN_METRIC, observationDate, sourcePolicyId);
-        await waitForStatus(client, createHash, TransactionStatus.ACCEPTED, { retries: 120, interval: 2000 }).catch(() => {});
+        setActiveOperation("Weather Event creation");
+        setStep("pending");
+        const createTx = await waitForFinalizedTransaction(client, createHash, {
+          retries: 120,
+          interval: 2000,
+          onAccepted: () => setStep("accepted"),
+        });
+        if (createTx.txExecutionResultName === "FINISHED_WITH_ERROR") throw new Error("Weather Event creation finalized with a failed execution.");
+        if (!(await eventExists(eventId))) throw new Error("Event creation finalized, but the latest-final state does not contain the event yet.");
       }
 
       if (alsoResolve) {
         setStep("resolving-event");
         const resolveHash = await resolveWeatherEvent(client, eventId);
-        await waitForStatus(client, resolveHash, TransactionStatus.ACCEPTED, { retries: 150, interval: 2000 }).catch(() => {});
+        setActiveOperation("WeatherResolve evidence resolution");
+        setStep("pending");
+        const resolveTx = await waitForFinalizedTransaction(client, resolveHash, {
+          retries: 150,
+          interval: 2000,
+          onAccepted: () => setStep("accepted"),
+        });
+        if (resolveTx.txExecutionResultName === "FINISHED_WITH_ERROR") throw new Error("Weather resolution finalized with a failed execution.");
+        // UNRESOLVED is a valid finalized observation outcome. Confirm the
+        // registry write is visible before the dependent policy transaction.
+        const resolutionStatus = await getResolutionStatus(eventId);
+        if (resolutionStatus !== "RESOLVED" && resolutionStatus !== "UNRESOLVED") {
+          throw new Error(`Weather event finalized, but its latest-final resolution status is ${resolutionStatus}.`);
+        }
         // Resolution can legitimately settle UNRESOLVED (e.g. a date the
         // configured sources don't cover, or a location whose evidence
         // sources aren't actually about it) -- that is not an error, the
         // policy below will simply read UNRESOLVED until it resolves.
       }
 
+      const previousPolicyIds = await listPolicyIdsByOwner(address);
       setStep("creating-policy");
       const policyHash = await createCoverPolicy(client, eventId, operator, thresholdMm100, payoutUnits);
-      await waitForStatus(client, policyHash, TransactionStatus.ACCEPTED, { retries: 120, interval: 2000 }).catch(() => {});
-      const tx = await getTransaction(policyHash);
-      if (tx.statusName && tx.statusName !== "ACCEPTED" && tx.statusName !== "FINALIZED") {
-        throw new Error(`Policy creation did not settle as accepted (${tx.statusName}). It may have reverted -- check the dedupe/threshold rules.`);
-      }
+      setActiveOperation("WeatherCover policy creation");
+      setStep("pending");
+      const policyTx = await waitForFinalizedTransaction(client, policyHash, {
+        retries: 120,
+        interval: 2000,
+        onAccepted: () => setStep("accepted"),
+      });
+      if (policyTx.txExecutionResultName === "FINISHED_WITH_ERROR") throw new Error("Policy creation finalized with a failed execution.");
 
       const ids = await listPolicyIdsByOwner(address);
-      const newestPolicyId = ids[ids.length - 1];
+      const newestPolicyId = ids.find((id) => !previousPolicyIds.includes(id));
+      if (!newestPolicyId) throw new Error("Policy transaction finalized, but the new policy is not visible in the latest-final owner list.");
       setStep("done");
       router.push(`/policies/${newestPolicyId}`);
     } catch (err) {
-      setStep("error");
+      if (err instanceof TransactionFinalityTimeoutError) {
+        setStep(err.statusName === "ACCEPTED" ? "accepted" : "pending");
+      } else {
+        setStep("error");
+      }
       setError(err instanceof Error ? err.message : "Failed to create the policy.");
     }
   }
@@ -301,7 +344,7 @@ export default function CreatePolicyPage() {
           {busy ? (
             <>
               <span className="wc-dot wc-pulse" style={{ background: "var(--wc-paper)", margin: 0 }} />
-              {STEP_LABEL[step]}
+              {step === "pending" || step === "accepted" ? `${activeOperation}: ${STEP_LABEL[step]}` : STEP_LABEL[step]}
             </>
           ) : (
             "Create Policy"
