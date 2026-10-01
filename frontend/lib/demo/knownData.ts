@@ -4,30 +4,35 @@
  * deterministic event_id, not an indexed feed). A real product would
  * index events off-chain or require the caller to already know an
  * event_id (e.g. from creating it, or from a link). For this demo
- * environment, the event/policy IDs actually created during the Stage 7
- * StudioNet verification run are listed here so the landing page and
- * dashboard have real on-chain data to point at immediately.
+ * environment, the event/policy IDs actually created during the
+ * post-deployment payout audit on the CURRENT contract
+ * (0x92A1DbA2D2F0E5707ee90f7EF4BB5aC704C171A0) are listed here so the
+ * landing page and dashboard have real on-chain data to point at
+ * immediately.
  *
  * This file is demo convenience only -- every ID below is independently
  * verifiable by reading the deployed contract directly (see
  * docs/DEPLOYMENT.md for the exact `genlayer call` commands used to
- * produce these values).
+ * produce these values). If the contract is redeployed again, these IDs
+ * (and the source policy IDs) will need updating to match -- see
+ * docs/MANUAL_DEPLOYMENT.md §6.
  */
 
 export const KNOWN_LOCATION_ID = "LAGOS_NG";
 export const KNOWN_METRIC = "RAIN_24H";
 
 /** A real, RESOLVED observation: 3 live Open-Meteo historical sources,
- * median 12.30mm, verified on StudioNet (Stage 6/7). */
-export const RESOLVED_DEMO_EVENT_ID = "6a2dfd724bec8a59";
-export const RESOLVED_DEMO_SOURCE_POLICY_ID = "SMOKE_V4";
+ * median 12.30mm, verified on StudioNet during the post-deployment
+ * payout audit. */
+export const RESOLVED_DEMO_EVENT_ID = "3d603813dbd7ae98";
+export const RESOLVED_DEMO_SOURCE_POLICY_ID = "AUDIT_V1";
 export const RESOLVED_DEMO_OBSERVATION_DATE = "2026-08-30";
 
 /** A real, UNRESOLVED observation: a source deliberately queried at the
  * wrong coordinates, correctly rejected as WRONG_LOCATION -> INSUFFICIENT_
  * SOURCES. Demonstrates UNRESOLVED is a first-class, honest outcome. */
-export const UNRESOLVED_DEMO_EVENT_ID = "b76f9c2a84ffff2a";
-export const UNRESOLVED_DEMO_SOURCE_POLICY_ID = "UNRES_V1";
+export const UNRESOLVED_DEMO_EVENT_ID = "f96bbf7bf2a964ae";
+export const UNRESOLVED_DEMO_SOURCE_POLICY_ID = "AUDIT_UNRES_V1";
 export const UNRESOLVED_DEMO_OBSERVATION_DATE = "2026-08-25";
 
 /** Cover policies created and evaluated against the events above during
