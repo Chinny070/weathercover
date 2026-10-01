@@ -26,6 +26,8 @@ Frontend env var:    NEXT_PUBLIC_CONTRACT_ADDRESS (see
 
 This is the deployment of the contract code that fixes the numeric-consensus-binding gap (Issue 1 of the final audit remediation pass — the validator now independently recomputes and compares `raw_value`/normalized value, not just text fidelity, before approving consensus). It supersedes `0x8a07659C329e1e1d865667A23745d472a696b073`, which was still running the pre-fix code. It is the one currently configured in `frontend/.env.local` and verified live end-to-end after redeployment: a real Lagos rainfall observation resolved from 3 independently retrieved sources (event `3d603813dbd7ae98`, `RESOLVED`, 12.30mm), a real policy (`cover-1`) evaluated to `TRIGGERED` with a 1000-unit simulated payout credited, `cover-2` to `NOT_TRIGGERED`, and `cover-3` (linked to a deliberately-misconfigured source) to `UNRESOLVED` — all independently re-verified on this address, not copied forward from the superseded deployment.
 
+**Release-candidate note (2026-10-01):** the source tree now adds validator binding for the persisted Evidence Package fields `location_match` and `location_detail` (SHA-256 `d1f8a35a7ed7599bbe0192a1aecdde2d1a413dc8d3c398fa3c0378ee25642d21`). That change has passed all local tests but is not in this already-manually-deployed contract. The address above remains the one active frontend target; manually redeploy the frozen release in `docs/RELEASE_FREEZE.md` before presenting the location-evidence binding as live.
+
 ## Superseded addresses
 
 These addresses appear in this repository's history (git log, prior docs, and `docs/AUDIT.md`'s findings) as earlier deployments. They are **not** canonical and should not be used for new work:

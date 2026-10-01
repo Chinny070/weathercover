@@ -606,6 +606,29 @@ def test_malicious_leader_raw_value_rejected_by_validator(direct_deploy, direct_
     assert direct_vm.run_validator(leader_result=malicious_leader_result) is False
 
 
+def test_malicious_leader_location_evidence_rejected_by_validator(direct_deploy, direct_owner, direct_vm):
+    # The location match/detail are persisted in the Evidence Package, so a
+    # leader must not be able to fabricate the explanation displayed to a
+    # consumer even when the source text and weather value are genuine.
+    contract, owner = _deploy(direct_deploy, direct_owner)
+    policy_id = _register_policy(contract, min_source_count=1)
+    url_a = "https://example.org/lagos-rain-location-proof"
+    _add_source(contract, policy_id, "src_a", url_a)
+    event_id = _create_event(contract, policy_id)
+
+    _mock_available(direct_vm, url_a, "8.60mm")
+    contract.resolve_weather_event(event_id)
+
+    forged_location_evidence = {
+        "status": "AVAILABLE",
+        "raw_text": PAGE_PREFIX + "8.60mm",
+        "raw_value": "8.60",
+        "location_match": "COORDINATES",
+        "location_detail": "matched coordinates within 1km: fabricated",
+    }
+    assert direct_vm.run_validator(leader_result=forged_location_evidence) is False
+
+
 def test_leader_and_validator_extract_different_values_rejected(direct_deploy, direct_owner, direct_vm):
     # Test 2: leader and validator retrieve the SAME source but it
     # genuinely reports a different value at each retrieval (simulating a
@@ -666,6 +689,8 @@ def test_matching_leader_and_validator_values_accepted(direct_deploy, direct_own
         "status": "AVAILABLE",
         "raw_text": PAGE_PREFIX + "8.60mm",
         "raw_value": "8.60",
+        "location_match": "CANONICAL_NAME",
+        "location_detail": "matched canonical_name: Lagos",
     }
     assert direct_vm.run_validator(leader_result=honest_leader_result) is True
 

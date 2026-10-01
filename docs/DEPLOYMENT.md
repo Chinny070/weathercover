@@ -92,7 +92,7 @@ cd path/to/Wheatheresolve
 python -m pytest tests/ -q
 ```
 
-All 47 direct-mode tests should pass. This exercises the full pipeline (event registry, source policies, location profiles, resolution with real `gl.nondet.web` calls under mocked HTTP, WeatherCover) without touching a live network.
+All 53 direct-mode tests should pass. This exercises the full pipeline (event registry, source policies, location profiles, resolution with real `gl.nondet.web` calls under mocked HTTP, WeatherCover) without touching a live network.
 
 ### 4b. Live StudioNet read check (no wallet needed)
 

@@ -57,7 +57,7 @@ This lifecycle was verified end-to-end on live GenLayer StudioNet — not simula
 
 ```
 contracts/weather_resolve_cover.py   The Intelligent Contract (WeatherResolve + WeatherCover, single deployment)
-tests/                                47 direct-mode tests (pytest + gltest), no live network required
+tests/                                53 direct-mode tests (pytest + gltest), no live network required
 frontend/                             Next.js app -- landing, dashboard, create policy, Evidence Explorer, policy result
 docs/
   SUBMISSION_ARCHITECTURE.md          Concise system architecture for judges/reviewers
@@ -72,7 +72,7 @@ docs/
 
 ## Status
 
-- **Contract**: implemented, 47/47 direct-mode tests passing, verified end-to-end on live GenLayer StudioNet.
+- **Contract**: implemented, 53/53 direct-mode tests passing. The active StudioNet deployment is verified end-to-end; the newest Evidence Package location-field binding is a tested release candidate pending manual redeployment.
 - **Frontend**: implemented, mobile-responsive, typechecked and built clean, verified in-browser against the live StudioNet contract.
 - **Deployment**: manual only — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). No automated deploys, no private key handling anywhere in this repository.
 

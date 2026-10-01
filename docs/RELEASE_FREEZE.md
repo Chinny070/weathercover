@@ -8,8 +8,8 @@ This document freezes the exact state of the codebase that is approved for manua
 
 ```
 File: contracts/weather_resolve_cover.py
-SHA-256: deb55571dc42fa9de17aa4cabf449b540f2cf911fb3098fcb480c5302f3d5897
-Lines: 1499
+SHA-256: d1f8a35a7ed7599bbe0192a1aecdde2d1a413dc8d3c398fa3c0378ee25642d21
+Lines: 1544
 ```
 
 Reproduce with:
@@ -22,6 +22,7 @@ sha256sum contracts/weather_resolve_cover.py
 
 ```
 npm run typecheck   →  PASS (0 errors)
+npm run lint        →  PASS (0 errors; 2 non-blocking dashboard hook-dependency warnings)
 npm run build        →  PASS (5/5 routes generated, 0 errors)
 ```
 
@@ -30,7 +31,7 @@ Routes: `/` (static), `/dashboard` (static), `/create-policy` (static), `/observ
 ## Test results
 
 ```
-python -m pytest tests/ -q   →  47 passed, 0 failed
+python -m pytest tests/ -q   →  53 passed, 0 failed (1 non-failing local cache-permission warning)
 ```
 
 Coverage: Weather Event Registry (creation, dedup, validation), Source Policy Registry (registration, source config, immutability lock), Location Resolution Profile Registry (canonical name/alias/country/coordinate matching, disambiguation), resolution pipeline (real `gl.nondet.web` calls under mocked HTTP via `gltest`'s `mock_web`, all retrieval-status branches, GenLayer fidelity-judgment path via `run_validator()`), and WeatherCover (policy creation, evaluation, dedup, UNRESOLVED handling, simulated balances).
@@ -66,7 +67,7 @@ This is the **only** network this project targets or has ever been verified agai
 These were explicitly out of scope for this release, not overlooked:
 
 - Additional weather metrics beyond `RAIN_24H` (architecture supports adding them later; none implemented).
-- Additional locations beyond whatever is registered on the deployed contract (registering a new location is an owner-only CLI action, not a frontend feature).
+- Additional locations beyond whatever is registered on the deployed contract. Any caller can register a Location Resolution Profile through the frontend's Create Policy flow; source-policy configuration remains owner-controlled.
 - Real funds, escrow, or tokenized payouts of any kind — simulated integer balances only.
 - A frontend admin UI for registering source policies, sources, or locations — these remain owner-only `genlayer write` calls performed manually via the CLI, by design (see `PRODUCT_ARCHITECTURE.md` §26).
 - Splitting WeatherResolve and WeatherCover into two separately-deployed contracts — deferred until cross-contract-call patterns are independently verified (see `IMPLEMENTATION_PLAN.md` §1).
@@ -76,4 +77,4 @@ These were explicitly out of scope for this release, not overlooked:
 
 ---
 
-**Status: FROZEN.** This is the exact codebase approved for manual deployment per `docs/MANUAL_DEPLOYMENT.md`.
+**Status: FROZEN FOR MANUAL DEPLOYMENT.** This source includes the validator binding for persisted location-verification fields; manually redeploy it before representing that specific follow-up as live on StudioNet.

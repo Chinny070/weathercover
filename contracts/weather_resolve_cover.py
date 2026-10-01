@@ -1278,6 +1278,17 @@ class WeatherResolveCover(gl.Contract):
                 if leader_data.get("raw_value") != my_data.get("raw_value"):
                     return False
 
+                # These fields are persisted in the Evidence Package.  They
+                # do not affect the arithmetic, but they are still
+                # resolution-bearing evidence state shown to consumers.  Do
+                # not let the leader supply a fabricated explanation of how
+                # a location was verified: store it only when the
+                # validator's independent location-profile evaluation agrees.
+                if leader_data.get("location_match", "") != my_data.get("location_match", ""):
+                    return False
+                if leader_data.get("location_detail", "") != my_data.get("location_detail", ""):
+                    return False
+
                 leader_normalized, leader_rejection = _normalize_to_mm100(
                     leader_data.get("raw_value"), reported_unit
                 )

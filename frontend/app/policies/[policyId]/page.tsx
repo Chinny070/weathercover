@@ -39,13 +39,14 @@ export default function PolicyResultPage({ params }: { params: Promise<{ policyI
   const { client } = useWallet();
 
   const detailState = useContractRead(() => getCoverPolicyDetail(policyId), [policyId]);
-  const { snapshot, run } = useTxAction(() => detailState.status === "ready" && refetch());
 
   // useContractRead re-fetches on dependency change; bumping a local key
   // forces that without needing a second piece of state machinery.
   function refetch() {
     window.location.reload();
   }
+
+  const { snapshot, run } = useTxAction(() => detailState.status === "ready" && refetch());
 
   if (detailState.status === "loading") {
     return <p style={{ color: "var(--wc-steel)" }}>Loading policy…</p>;
