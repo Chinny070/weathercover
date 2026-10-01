@@ -2,6 +2,8 @@
 
 Produced as part of the final audit remediation pass. Every command below was actually run (not summarized from memory) on this exact codebase, after the numeric-consensus binding fix, the Evidence Package location-field binding follow-up, open location registration, canonical address cleanup, and wording fixes.
 
+**Tested source revision:** `061e171e3de024dd705840f0cbbd695c70ac8a1a`.
+
 ---
 
 ## Contract tests
