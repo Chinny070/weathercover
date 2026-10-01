@@ -11,6 +11,8 @@ real retrieval functions running against a faked HTTP layer, not a
 contract-side "mock://" shortcut.
 """
 
+import json
+
 CONTRACT_PATH = "contracts/weather_resolve_cover.py"
 
 LOCATION = "LAGOS_NG"  # internal location_id -- never expected in evidence text
@@ -565,3 +567,108 @@ def test_validator_disagrees_on_conflicting_status(direct_deploy, direct_owner, 
     direct_vm.clear_mocks()
     direct_vm.mock_web(url_a, {"method": "GET", "status": 503, "body": ""})
     assert direct_vm.run_validator() is False
+
+
+# ---------------------------------------------------------------------
+# Numeric consensus binding (adversarial): text agreement/fidelity alone
+# must NOT be sufficient to approve a resolution -- the validator must
+# independently recompute raw_value/normalized_value and reject if its
+# own recomputation does not match what the leader claims, even when the
+# leader's claimed raw_text is genuine. See contracts/weather_resolve_
+# cover.py resolve_weather_event's validator_fn for the fix this proves.
+# ---------------------------------------------------------------------
+
+
+def test_malicious_leader_raw_value_rejected_by_validator(direct_deploy, direct_owner, direct_vm):
+    # Test 1: leader returns genuine, matching raw_text (so the text-level
+    # check alone would approve it) but a fabricated raw_value that does
+    # not match what that text actually extracts to. Expected: FAIL
+    # consensus -- validator_fn must return False.
+    contract, owner = _deploy(direct_deploy, direct_owner)
+    policy_id = _register_policy(contract, min_source_count=1)
+    url_a = "https://example.org/lagos-rain-a"
+    _add_source(contract, policy_id, "src_a", url_a)
+    event_id = _create_event(contract, policy_id)
+
+    _mock_available(direct_vm, url_a, "8.60mm")
+    contract.resolve_weather_event(event_id)
+
+    # The real leader result for this mock is {"status": "AVAILABLE",
+    # "raw_text": "...8.60mm", "raw_value": "8.60", ...}. Override it with
+    # a malicious claim that reuses the SAME genuine raw_text (so a
+    # text-only check would wrongly approve) but a fabricated raw_value
+    # ("999") that does not match what that text actually extracts to.
+    malicious_leader_result = {
+        "status": "AVAILABLE",
+        "raw_text": PAGE_PREFIX + "8.60mm",
+        "raw_value": "999",
+    }
+    assert direct_vm.run_validator(leader_result=malicious_leader_result) is False
+
+
+def test_leader_and_validator_extract_different_values_rejected(direct_deploy, direct_owner, direct_vm):
+    # Test 2: leader and validator retrieve the SAME source but it
+    # genuinely reports a different value at each retrieval (simulating a
+    # source that changed between the leader's and the validator's
+    # independent fetches). Expected: validator_fn rejects (FAIL
+    # consensus). Direct mode auto-runs only leader_fn and does not gate
+    # resolve_weather_event's own RESOLVED/UNRESOLVED outcome on
+    # validator_fn's result (consensus enforcement is real-network
+    # behavior, not reproducible in this harness -- same documented
+    # limitation as test_validator_disagrees_on_conflicting_status
+    # above); on real GenLayer consensus, a validator rejection like this
+    # is exactly what prevents a resolution from finalizing, which is why
+    # asserting the rejection itself is the correct, honest thing to test
+    # here.
+    contract, owner = _deploy(direct_deploy, direct_owner)
+    policy_id = _register_policy(contract, min_source_count=1)
+    url_a = "https://example.org/lagos-rain-drifting"
+    _add_source(contract, policy_id, "src_a", url_a)
+    event_id = _create_event(contract, policy_id)
+
+    _mock_available(direct_vm, url_a, "8.60mm")
+    contract.resolve_weather_event(event_id)
+
+    # Validator independently retrieves a genuinely different value, with
+    # different raw_text -- so the text-fidelity LLM judgment path is
+    # reached first. Mock it to judge the two excerpts "faithful" (a
+    # plausible real verdict: same source, just an updated reading),
+    # specifically to prove the NEW raw_value check still rejects even
+    # when text-fidelity alone would have approved.
+    direct_vm.clear_mocks()
+    _mock_available(direct_vm, url_a, "20.00mm")
+    direct_vm.mock_llm(
+        r"checking whether two independently retrieved excerpts",
+        json.dumps({"faithful": True, "reason": "Same source, reading updated between fetches."}),
+    )
+    assert direct_vm.run_validator() is False
+
+
+def test_matching_leader_and_validator_values_accepted(direct_deploy, direct_owner, direct_vm):
+    # Test 3 (control case): normal valid evidence, leader's claimed
+    # result genuinely matches the validator's own independent
+    # recomputation (raw_text, raw_value, and therefore normalized
+    # value). Expected: consensus succeeds and the event resolves
+    # RESOLVED, exactly as the existing resolution tests already prove --
+    # this test additionally exercises the new raw_value/normalized-value
+    # comparison explicitly via an overridden-but-matching leader_result,
+    # to prove the new check does not reject honest agreement.
+    contract, owner = _deploy(direct_deploy, direct_owner)
+    policy_id = _register_policy(contract, min_source_count=1)
+    url_a = "https://example.org/lagos-rain-honest"
+    _add_source(contract, policy_id, "src_a", url_a)
+    event_id = _create_event(contract, policy_id)
+
+    _mock_available(direct_vm, url_a, "8.60mm")
+    contract.resolve_weather_event(event_id)
+
+    honest_leader_result = {
+        "status": "AVAILABLE",
+        "raw_text": PAGE_PREFIX + "8.60mm",
+        "raw_value": "8.60",
+    }
+    assert direct_vm.run_validator(leader_result=honest_leader_result) is True
+
+    observation = contract.observation_get_observation(event_id)
+    assert observation["status"] == "RESOLVED"
+    assert observation["value_mm100"] == 860

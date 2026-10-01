@@ -2,6 +2,8 @@
 
 Scope: audit only. No features added, no contract changes, no architecture changes. One real bug was found and fixed in the frontend's contract-interaction layer (below) — that is a compatibility fix, not a feature.
 
+> **Historical record notice:** this audit was performed against contract `0x92A1DbA2D2F0E5707ee90f7EF4BB5aC704C171A0`, a disposable verification deployment that has since been superseded. Every transaction hash below is specific to that deployment and is preserved as an accurate record of what was actually tested at the time — it has not been rewritten to a different address. **For the current canonical contract, see `docs/CANONICAL_DEPLOYMENT.md`**; a later remediation pass (`docs/FINAL_TEST_REPORT.md`) independently re-ran the equivalent checks against the canonical address.
+
 ---
 
 ## 1. Frontend ↔ contract compatibility
@@ -102,7 +104,7 @@ Minor fix made in passing: `pyproject.toml`'s description still said "no fronten
 
 | Time | Action | Screen | What to say |
 |---|---|---|---|
-| 0:00–0:20 | Open the landing page | `/` | "WeatherCover is parametric weather insurance — but the interesting part isn't the insurance, it's how the weather condition gets verified. WeatherResolve, underneath, is reusable infrastructure: any app can ask it 'what actually happened,' and it won't answer until independent sources agree." |
+| 0:00–0:20 | Open the landing page | `/` | "WeatherCover is parametric weather insurance — but the interesting part isn't the insurance, it's how the weather condition gets verified. WeatherResolve, underneath, is reusable infrastructure: any app can ask it 'what actually happened,' and it won't answer until multiple independently retrieved sources agree." |
 | 0:20–0:40 | Point at the example policy card and the 5-step flow diagram | `/` (scroll to "How it works") | "Every policy follows the same path: create it, request the real-world observation, verify the evidence, evaluate the condition, decide coverage. Nothing is decided until the evidence is in." |
 | 0:40–1:00 | Open the Evidence Explorer for the live resolved observation | `/observations/6a2dfd724bec8a59` | "This is a real observation, resolved live on GenLayer StudioNet minutes ago — not a mock. 12.30mm of rain in Lagos on August 30th." |
 | 1:00–1:40 | Scroll through the 4-stage verification flow and the evidence table | same page | "Source retrieval, evidence validation, observation resolution, policy evaluation — each stage is real. Three independent Open-Meteo historical queries, each independently checked against a Location Resolution Profile — canonical name, aliases, country, **or coordinate proximity**, since real APIs never say 'Lagos' in their JSON, they just give you coordinates. All three agree within tolerance: 12.30, 10.50, 13.60mm. GenLayer validators reached `MAJORITY_AGREE` on this evidence independently — this wasn't one API call I'm trusting, it's a network of validators that each fetched it themselves." |
@@ -120,7 +122,7 @@ Minor fix made in passing: `pyproject.toml`'s description still said "no fronten
 
 ### The GenLayer value proposition, in one paragraph
 
-A traditional smart contract can check "is X below Y" perfectly — that part needs no blockchain innovation at all. What it categorically cannot do is find out, on its own, whether it rained 12.3mm in Lagos on a given day; it has to trust whatever single source feeds it that number. GenLayer's non-deterministic web access lets a contract itself fetch real-world evidence from multiple independent sources, and its validator consensus mechanism means the contract only accepts a value once independent validators, each retrieving the evidence themselves, agree it's real. WeatherResolve turns that primitive into reusable infrastructure — a canonical, deduplicated Observation Registry — so any number of future applications (not just WeatherCover) can consume a verified real-world fact without re-solving the oracle problem themselves. And critically, it can honestly say "unresolved" instead of guessing, which is the one thing a single-oracle design structurally cannot do with integrity.
+A traditional smart contract can check "is X below Y" perfectly — that part needs no blockchain innovation at all. What it categorically cannot do is find out, on its own, whether it rained 12.3mm in Lagos on a given day; it has to trust whatever single source feeds it that number. GenLayer's non-deterministic web access lets a contract itself fetch real-world evidence from multiple independently retrieved sources, and its validator consensus mechanism means the contract only accepts a value once independent validators, each retrieving the evidence themselves, agree it's real. WeatherResolve turns that primitive into reusable infrastructure — a canonical, deduplicated Observation Registry — so any number of future applications (not just WeatherCover) can consume a verified real-world fact without re-solving the oracle problem themselves. And critically, it can honestly say "unresolved" instead of guessing, which is the one thing a single-oracle design structurally cannot do with integrity.
 
 ---
 

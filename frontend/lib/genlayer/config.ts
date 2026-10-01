@@ -4,16 +4,16 @@ import { chains, createClient } from "genlayer-js";
  * The deployed WeatherResolveCover contract address. Configurable via
  * NEXT_PUBLIC_CONTRACT_ADDRESS (see .env.example / docs/DEPLOYMENT.md) so
  * this frontend can be pointed at any StudioNet deployment without a code
- * change. Falls back to the last address this project manually verified
- * end-to-end (Stage 7: WeatherCover lifecycle verification) purely so
- * local dev has real on-chain data by default.
+ * change. Falls back to the canonical deployment address (see
+ * docs/CANONICAL_DEPLOYMENT.md) purely so local dev has real on-chain
+ * data by default.
  *
  * This constant is never written to by this app -- deployment remains a
  * manual, wallet-controlled step performed outside the frontend. See
- * docs/DEPLOYMENT.md.
+ * docs/DEPLOYMENT.md and docs/CANONICAL_DEPLOYMENT.md.
  */
 export const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ??
-  "0x0908545f451521D3760183976c7e6848Fc7Ac701") as `0x${string}`;
+  "0x8a07659C329e1e1d865667A23745d472a696b073") as `0x${string}`;
 
 export const STUDIONET_CHAIN_ID = 61999;
 export const STUDIONET_CHAIN_ID_HEX = "0xf22f";

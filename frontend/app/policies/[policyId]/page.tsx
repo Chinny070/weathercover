@@ -161,7 +161,7 @@ export default function PolicyResultPage({ params }: { params: Promise<{ policyI
             <>
               <p className="mt-2 text-sm" style={{ color: "var(--wc-graphite)" }}>
                 {observation.status === "RESOLVED"
-                  ? `Resolved to ${mm100ToDisplay(observation.value_mm100)}mm from ${observation.source_count} independent sources.`
+                  ? `Resolved to ${mm100ToDisplay(observation.value_mm100)}mm from ${observation.source_count} independently retrieved sources.`
                   : `Unresolved: ${observation.resolution_reason.replace(/_/g, " ")}.`}
               </p>
               <Link href={`/observations/${policy.weather_event_id}`} className="wc-btn-secondary mt-3 inline-block text-sm">

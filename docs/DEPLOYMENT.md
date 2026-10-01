@@ -2,6 +2,8 @@
 
 This project's deployment workflow is, and remains, **manual and wallet-controlled by the project owner**. Nothing in this repository — the contract, the test suite, or the frontend — deploys a contract automatically, requests a private key, or holds wallet credentials. This document exists so that stays true as the project grows.
 
+> **Canonical address:** this project has gone through several disposable verification deployments while being built and audited. **`docs/CANONICAL_DEPLOYMENT.md` is the single source of truth** for which address is current — if anything below ever looks inconsistent with it, that document wins.
+
 ---
 
 ## 1. Contract deployment (manual, owner-performed)
@@ -37,18 +39,20 @@ The exact commands used to produce the currently-deployed demo contract's data a
 
 ## 2. Currently deployed StudioNet contract (demo data)
 
+See `docs/CANONICAL_DEPLOYMENT.md` for the authoritative address record. As of that document:
+
 | Field | Value |
 |---|---|
 | Network | GenLayer StudioNet, chain ID `61999`, RPC `https://studio.genlayer.com/api` |
-| Contract address | `0x0908545f451521D3760183976c7e6848Fc7Ac701` |
-| Location profile | `LAGOS_NG` (canonical name "Lagos", country "Nigeria", coordinates 6.52°N/3.38°E, radius 50km) |
-| Source policy (RESOLVED demo) | `SMOKE_V4` — 3 real Open-Meteo historical-archive sources, min 3, tolerance 3.50mm |
-| Resolved event | `6a2dfd724bec8a59` — `LAGOS_NG`/`RAIN_24H`/`2026-08-30` → **RESOLVED**, 12.30mm |
-| Source policy (UNRESOLVED demo) | `UNRES_V1` — 1 source deliberately queried at the wrong coordinates |
-| Unresolved event | `b76f9c2a84ffff2a` — `LAGOS_NG`/`RAIN_24H`/`2026-08-25` → **UNRESOLVED**, `INSUFFICIENT_SOURCES` |
+| Contract address | `0x8a07659C329e1e1d865667A23745d472a696b073` |
+| Location profile | `LAGOS_NG` (canonical name "Lagos", country "Nigeria", coordinates 6.52°N/3.38°E, radius 50km) — open to any caller to register additional locations, see `contracts/weather_resolve_cover.py` `location_register_profile` |
+| Source policy (RESOLVED demo) | `AUDIT_V1` — 3 real Open-Meteo historical-archive sources, min 3, tolerance 3.50mm |
+| Resolved event | `3d603813dbd7ae98` — `LAGOS_NG`/`RAIN_24H`/`2026-08-30` → **RESOLVED**, 12.30mm |
+| Source policy (UNRESOLVED demo) | `AUDIT_UNRES_V1` — 1 source deliberately queried at the wrong coordinates |
+| Unresolved event | `f96bbf7bf2a964ae` — `LAGOS_NG`/`RAIN_24H`/`2026-08-25` → **UNRESOLVED**, `INSUFFICIENT_SOURCES` |
 | Demo cover policies | `cover-1` (TRIGGERED), `cover-2` (NOT_TRIGGERED), `cover-3` (UNRESOLVED) |
 
-This is a disposable verification deployment, not a production instance. It exists so the frontend has real, independently-verifiable on-chain data to point at without anyone needing to re-run setup.
+This is a disposable verification deployment, not a production instance. It exists so the frontend has real, independently-verifiable on-chain data to point at without anyone needing to re-run setup. All six rows above were independently re-verified live (not just copied forward) as part of the final audit remediation pass.
 
 ---
 
@@ -58,7 +62,7 @@ The frontend never hardcodes a contract address as truth — it reads one enviro
 
 ```bash
 # frontend/.env.local (gitignored, never committed)
-NEXT_PUBLIC_CONTRACT_ADDRESS=0x0908545f451521D3760183976c7e6848Fc7Ac701
+NEXT_PUBLIC_CONTRACT_ADDRESS=0x8a07659C329e1e1d865667A23745d472a696b073
 ```
 
 See `frontend/.env.example` for the template. To point the frontend at a different deployment (e.g. after a future manual redeploy), change only this value — no code change needed. `frontend/lib/genlayer/config.ts` reads it with a fallback to the address above, purely so local development has real data without any setup step.
@@ -93,7 +97,7 @@ All 47 direct-mode tests should pass. This exercises the full pipeline (event re
 ### 4b. Live StudioNet read check (no wallet needed)
 
 ```bash
-genlayer call 0x0908545f451521D3760183976c7e6848Fc7Ac701 observation_get_observation --args 6a2dfd724bec8a59
+genlayer call 0x8a07659C329e1e1d865667A23745d472a696b073 observation_get_observation --args 3d603813dbd7ae98
 ```
 
 Should return the RESOLVED Evidence Package with `value_mm100: 1230` and 3 `AVAILABLE` sources.

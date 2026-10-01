@@ -18,7 +18,7 @@ GenLayer Intelligent Contracts can execute non-deterministic operations — incl
 
 ## WeatherResolve — the infrastructure layer
 
-WeatherResolve retrieves weather evidence from multiple independent real-world sources, verifies that each source's response actually pertains to the requested **location** (via a generic Location Resolution Profile — canonical name, aliases, country, or coordinate proximity, never an internal ID a real source would never contain) and the requested **date**, normalizes every value to a common unit, and resolves one canonical observation once enough independent sources agree.
+WeatherResolve retrieves weather evidence from multiple independently retrieved weather evidence sources, verifies that each source's response actually pertains to the requested **location** (via a generic Location Resolution Profile — canonical name, aliases, country, or coordinate proximity, never an internal ID a real source would never contain) and the requested **date**, normalizes every value to a common unit, and resolves one canonical observation once enough of those independently retrieved sources agree.
 
 A resolution can also honestly come back **UNRESOLVED** — too few valid sources, disagreement beyond tolerance, or a location/date mismatch. That is a first-class, expected outcome, not an error: WeatherResolve would rather say "I don't know yet" than fabricate a number.
 
@@ -38,7 +38,7 @@ Payouts in this build are **simulated units only** — no real funds, escrow, or
 ```
 Real-world weather data
         ↓
-WeatherResolve            (retrieves evidence from independent sources)
+WeatherResolve            (retrieves evidence from multiple independently retrieved sources)
         ↓
 Evidence Package          (per-source: retrieval status, location/date match, normalized value)
         ↓
@@ -49,7 +49,7 @@ WeatherCover Policy       (reads the resolved observation, evaluates BELOW/ABOVE
 TRIGGERED / NOT_TRIGGERED / UNRESOLVED
 ```
 
-This lifecycle was verified end-to-end on live GenLayer StudioNet — not simulated — including a real historical Lagos rainfall observation resolved from 3 independent sources, and a real coverage policy evaluated to `TRIGGERED` against it. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the exact addresses and transaction hashes.
+This lifecycle was verified end-to-end on live GenLayer StudioNet — not simulated — including a real historical Lagos rainfall observation resolved from 3 independently retrieved weather evidence sources, and a real coverage policy evaluated to `TRIGGERED` against it. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the exact addresses and transaction hashes.
 
 ---
 

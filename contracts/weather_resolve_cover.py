@@ -1229,6 +1229,7 @@ class WeatherResolveCover(gl.Contract):
             # requirement, protocol_court.py sec on _fetch_evidence).
             url = source.url
             fetch_mode = source.fetch_mode
+            reported_unit = source.reported_unit
 
             def leader_fn():
                 return _classify_and_extract(url, fetch_mode, location_ctx, expected_period)
@@ -1244,18 +1245,47 @@ class WeatherResolveCover(gl.Contract):
                     return False
                 if my_data["status"] != RETRIEVAL_AVAILABLE:
                     return True
+
                 leader_text = leader_data.get("raw_text", "")
                 my_text = my_data.get("raw_text", "")
-                if leader_text == my_text:
-                    return True
-                # Semantic verification (GenLayer judgment): only reached
-                # when leader and validator retrieved byte-different text
-                # for the same URL. Never used for numeric extraction.
-                judgment = gl.nondet.exec_prompt(
-                    _fidelity_prompt(url, leader_text, my_text),
-                    response_format="json",
+                if leader_text != my_text:
+                    # Semantic verification (GenLayer judgment): only
+                    # reached when leader and validator retrieved
+                    # byte-different text for the same URL. Never used
+                    # for numeric extraction itself -- it only answers
+                    # "is this substantively the same source", not "what
+                    # number does it contain".
+                    judgment = gl.nondet.exec_prompt(
+                        _fidelity_prompt(url, leader_text, my_text),
+                        response_format="json",
+                    )
+                    if not _judged_faithful(judgment):
+                        return False
+
+                # Numeric consensus binding: text agreement (or a
+                # favorable fidelity judgment) is NOT by itself proof
+                # that the leader's claimed raw_value/normalized value
+                # actually came from that text. A leader's returned dict
+                # is calldata, not re-executed code -- nothing stops a
+                # compromised leader from claiming a fabricated raw_value
+                # alongside genuine raw_text. The validator must
+                # independently recompute the extracted value from ITS
+                # OWN retrieval and require it to match the leader's
+                # claim exactly before approving. This is the
+                # authoritative check: consensus is bound to the
+                # validator's own recomputation, not to the leader's
+                # self-reported fields.
+                if leader_data.get("raw_value") != my_data.get("raw_value"):
+                    return False
+
+                leader_normalized, leader_rejection = _normalize_to_mm100(
+                    leader_data.get("raw_value"), reported_unit
                 )
-                return _judged_faithful(judgment)
+                my_normalized, my_rejection = _normalize_to_mm100(my_data.get("raw_value"), reported_unit)
+                if leader_rejection != my_rejection or leader_normalized != my_normalized:
+                    return False
+
+                return True
 
             data = gl.vm.run_nondet(leader_fn, validator_fn)
             _require(isinstance(data, dict), "EXPECTED:MALFORMED_FETCH_RESULT")

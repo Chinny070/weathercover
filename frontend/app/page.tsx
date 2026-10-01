@@ -29,7 +29,7 @@ export default function LandingPage() {
         <p className="mx-auto mt-6 max-w-xl text-base" style={{ color: "var(--wc-graphite)" }}>
           WeatherCover is not a weather app. It is a parametric insurance application built on
           WeatherResolve — a reusable infrastructure layer that retrieves real-world weather evidence,
-          verifies it against independent sources, and reaches GenLayer validator consensus on what
+          verifies it against multiple independently retrieved sources, and reaches GenLayer validator consensus on what
           actually happened, before any coverage decision is made.
         </p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
@@ -49,7 +49,7 @@ export default function LandingPage() {
             WeatherResolve
           </p>
           <p className="mt-2 text-sm" style={{ color: "var(--wc-graphite)" }}>
-            Reusable infrastructure. Retrieves evidence from multiple independent real-world sources,
+            Reusable infrastructure. Retrieves evidence from multiple independently retrieved real-world sources,
             verifies location and date, normalizes values, and resolves one canonical observation —
             reused by any number of applications, not just WeatherCover.
           </p>

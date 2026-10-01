@@ -4,9 +4,8 @@
  * deterministic event_id, not an indexed feed). A real product would
  * index events off-chain or require the caller to already know an
  * event_id (e.g. from creating it, or from a link). For this demo
- * environment, the event/policy IDs actually created during the
- * post-deployment payout audit on the CURRENT contract
- * (0x92A1DbA2D2F0E5707ee90f7EF4BB5aC704C171A0) are listed here so the
+ * environment, the event/policy IDs listed here were created directly
+ * on the CANONICAL contract (see docs/CANONICAL_DEPLOYMENT.md) so the
  * landing page and dashboard have real on-chain data to point at
  * immediately.
  *
@@ -15,15 +14,14 @@
  * docs/DEPLOYMENT.md for the exact `genlayer call` commands used to
  * produce these values). If the contract is redeployed again, these IDs
  * (and the source policy IDs) will need updating to match -- see
- * docs/MANUAL_DEPLOYMENT.md §6.
+ * docs/MANUAL_DEPLOYMENT.md §6 and docs/CANONICAL_DEPLOYMENT.md.
  */
 
 export const KNOWN_LOCATION_ID = "LAGOS_NG";
 export const KNOWN_METRIC = "RAIN_24H";
 
 /** A real, RESOLVED observation: 3 live Open-Meteo historical sources,
- * median 12.30mm, verified on StudioNet during the post-deployment
- * payout audit. */
+ * median 12.30mm, verified on the canonical StudioNet contract. */
 export const RESOLVED_DEMO_EVENT_ID = "3d603813dbd7ae98";
 export const RESOLVED_DEMO_SOURCE_POLICY_ID = "AUDIT_V1";
 export const RESOLVED_DEMO_OBSERVATION_DATE = "2026-08-30";
@@ -35,8 +33,9 @@ export const UNRESOLVED_DEMO_EVENT_ID = "f96bbf7bf2a964ae";
 export const UNRESOLVED_DEMO_SOURCE_POLICY_ID = "AUDIT_UNRES_V1";
 export const UNRESOLVED_DEMO_OBSERVATION_DATE = "2026-08-25";
 
-/** Cover policies created and evaluated against the events above during
- * Stage 7 verification: TRIGGERED, NOT_TRIGGERED, and UNRESOLVED. */
+/** Cover policies created and evaluated against the events above on the
+ * canonical contract: TRIGGERED (cover-1), NOT_TRIGGERED (cover-2), and
+ * UNRESOLVED (cover-3). */
 export const DEMO_COVER_POLICY_IDS = ["cover-1", "cover-2", "cover-3"] as const;
 
 /**
