@@ -6,6 +6,8 @@ import { useWallet } from "@/lib/wallet/WalletProvider";
 import {
   computeEventId,
   eventExists,
+  locationExists,
+  registerLocation,
   createWeatherEvent,
   resolveWeatherEvent,
   createCoverPolicy,
@@ -21,10 +23,21 @@ import {
   RESOLVED_DEMO_OBSERVATION_DATE,
 } from "@/lib/demo/knownData";
 
-type Step = "idle" | "checking-event" | "creating-event" | "resolving-event" | "creating-policy" | "done" | "error";
+type Step =
+  | "idle"
+  | "checking-location"
+  | "registering-location"
+  | "checking-event"
+  | "creating-event"
+  | "resolving-event"
+  | "creating-policy"
+  | "done"
+  | "error";
 
 const STEP_LABEL: Record<Step, string> = {
   idle: "",
+  "checking-location": "Checking whether this location is already registered…",
+  "registering-location": "Registering this location on WeatherResolve (signature required)…",
   "checking-event": "Checking whether this observation has been requested before…",
   "creating-event": "Requesting the weather event on WeatherResolve (signature required)…",
   "resolving-event": "Resolving real-world evidence for this event (signature required)…",
@@ -36,6 +49,14 @@ const STEP_LABEL: Record<Step, string> = {
 export default function CreatePolicyPage() {
   const { address, client, connect, hasProvider } = useWallet();
   const router = useRouter();
+
+  const [locationId, setLocationId] = useState(KNOWN_LOCATION_ID);
+  const [canonicalName, setCanonicalName] = useState("");
+  const [country, setCountry] = useState("");
+  const [hasCoordinates, setHasCoordinates] = useState(false);
+  const [latDegrees, setLatDegrees] = useState("");
+  const [lonDegrees, setLonDegrees] = useState("");
+  const [radiusKm, setRadiusKm] = useState("50");
 
   const [sourcePolicyId, setSourcePolicyId] = useState<string>(AVAILABLE_SOURCE_POLICIES[0].id);
   const [observationDate, setObservationDate] = useState(RESOLVED_DEMO_OBSERVATION_DATE);
@@ -54,6 +75,12 @@ export default function CreatePolicyPage() {
     if (!client || !address) return;
     setError(null);
 
+    const location = locationId.trim().toUpperCase();
+    if (!location) {
+      setError("Enter a location ID (e.g. LAGOS_NG).");
+      return;
+    }
+
     const thresholdMm100 = Math.round(parseFloat(thresholdMm) * 100);
     const payoutUnits = Math.round(parseFloat(payout));
     if (!Number.isFinite(thresholdMm100) || thresholdMm100 <= 0) {
@@ -66,13 +93,45 @@ export default function CreatePolicyPage() {
     }
 
     try {
+      setStep("checking-location");
+      const alreadyRegistered = await locationExists(location);
+
+      if (!alreadyRegistered) {
+        if (!canonicalName.trim() || !country.trim()) {
+          throw new Error(
+            `"${location}" isn't registered yet. Fill in the city name and country below to register it (anyone can -- it's open).`,
+          );
+        }
+        const latNum = hasCoordinates ? parseFloat(latDegrees) : 0;
+        const lonNum = hasCoordinates ? parseFloat(lonDegrees) : 0;
+        const radiusNum = hasCoordinates ? parseFloat(radiusKm) : 0;
+        if (hasCoordinates && (!Number.isFinite(latNum) || !Number.isFinite(lonNum) || !Number.isFinite(radiusNum))) {
+          throw new Error("Enter valid numbers for latitude, longitude, and radius.");
+        }
+
+        setStep("registering-location");
+        const registerHash = await registerLocation(
+          client,
+          location,
+          canonicalName.trim(),
+          country.trim(),
+          hasCoordinates,
+          Math.round(Math.abs(latNum) * 100),
+          latNum < 0,
+          Math.round(Math.abs(lonNum) * 100),
+          lonNum < 0,
+          Math.round(radiusNum),
+        );
+        await waitForStatus(client, registerHash, TransactionStatus.ACCEPTED, { retries: 120, interval: 2000 }).catch(() => {});
+      }
+
       setStep("checking-event");
-      const eventId = await computeEventId(KNOWN_LOCATION_ID, KNOWN_METRIC, observationDate, sourcePolicyId);
+      const eventId = await computeEventId(location, KNOWN_METRIC, observationDate, sourcePolicyId);
       const exists = await eventExists(eventId);
 
       if (!exists) {
         setStep("creating-event");
-        const createHash = await createWeatherEvent(client, KNOWN_LOCATION_ID, KNOWN_METRIC, observationDate, sourcePolicyId);
+        const createHash = await createWeatherEvent(client, location, KNOWN_METRIC, observationDate, sourcePolicyId);
         await waitForStatus(client, createHash, TransactionStatus.ACCEPTED, { retries: 120, interval: 2000 }).catch(() => {});
       }
 
@@ -81,7 +140,8 @@ export default function CreatePolicyPage() {
         const resolveHash = await resolveWeatherEvent(client, eventId);
         await waitForStatus(client, resolveHash, TransactionStatus.ACCEPTED, { retries: 150, interval: 2000 }).catch(() => {});
         // Resolution can legitimately settle UNRESOLVED (e.g. a date the
-        // configured sources don't cover) -- that is not an error, the
+        // configured sources don't cover, or a location whose evidence
+        // sources aren't actually about it) -- that is not an error, the
         // policy below will simply read UNRESOLVED until it resolves.
       }
 
@@ -125,16 +185,58 @@ export default function CreatePolicyPage() {
       <form onSubmit={handleSubmit} className="wc-card mt-6 flex flex-col gap-5">
         <div>
           <label className="text-sm font-medium">Location</label>
-          <input className="wc-input wc-mono mt-1" value={KNOWN_LOCATION_ID} disabled />
+          <input
+            className="wc-input wc-mono mt-1"
+            value={locationId}
+            onChange={(e) => setLocationId(e.target.value)}
+            placeholder="e.g. LAGOS_NG"
+          />
           <p className="mt-1 text-xs" style={{ color: "var(--wc-steel)" }}>
-            Only locations with a registered Location Resolution Profile are available. Adding a new
-            location is an infrastructure-operator action, not an end-user one.
+            Anyone can register a new location. If this one doesn&apos;t exist yet on-chain, fill in the
+            details below and it will be registered automatically when you submit.
           </p>
+        </div>
+
+        <div className="wc-panel flex flex-col gap-3 !p-3">
+          <p className="text-xs font-medium" style={{ color: "var(--wc-steel)" }}>
+            NEW LOCATION DETAILS (only needed if the location above doesn&apos;t exist yet)
+          </p>
+          <div>
+            <label className="text-sm">City / canonical name</label>
+            <input className="wc-input mt-1" value={canonicalName} onChange={(e) => setCanonicalName(e.target.value)} placeholder="e.g. Lagos" />
+          </div>
+          <div>
+            <label className="text-sm">Country</label>
+            <input className="wc-input mt-1" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. Nigeria" />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={hasCoordinates} onChange={(e) => setHasCoordinates(e.target.checked)} />
+            Also match by coordinates (recommended -- real weather APIs usually report coordinates, not city names)
+          </label>
+          {hasCoordinates ? (
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs">Latitude</label>
+                <input className="wc-input wc-mono mt-1" value={latDegrees} onChange={(e) => setLatDegrees(e.target.value)} placeholder="6.52" inputMode="decimal" />
+              </div>
+              <div>
+                <label className="text-xs">Longitude</label>
+                <input className="wc-input wc-mono mt-1" value={lonDegrees} onChange={(e) => setLonDegrees(e.target.value)} placeholder="3.38" inputMode="decimal" />
+              </div>
+              <div>
+                <label className="text-xs">Radius (km)</label>
+                <input className="wc-input wc-mono mt-1" value={radiusKm} onChange={(e) => setRadiusKm(e.target.value)} inputMode="numeric" />
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div>
           <label className="text-sm font-medium">Weather metric</label>
           <input className="wc-input wc-mono mt-1" value={KNOWN_METRIC} disabled />
+          <p className="mt-1 text-xs" style={{ color: "var(--wc-steel)" }}>
+            Only RAIN_24H is supported in this release.
+          </p>
         </div>
 
         <div>
@@ -146,6 +248,11 @@ export default function CreatePolicyPage() {
               </option>
             ))}
           </select>
+          <p className="mt-1 text-xs" style={{ color: "var(--wc-steel)" }}>
+            Evidence sources are configured per source policy by whoever set it up -- registering a new
+            location does not create new weather sources for it. Use a source policy whose configured
+            sources actually cover your new location, or results will come back UNRESOLVED.
+          </p>
         </div>
 
         <div>

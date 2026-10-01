@@ -199,6 +199,36 @@ def test_unauthorized_policy_creation_rejected(direct_deploy, direct_owner, dire
         direct_vm.sender = owner
 
 
+def test_any_caller_can_register_a_location(direct_deploy, direct_owner, direct_alice, direct_vm):
+    # Product decision: location registration is intentionally open to any
+    # caller (unlike source policies, which stay owner-gated since they
+    # govern which evidence sources are trusted).
+    contract, owner = _deploy(direct_deploy, direct_owner)
+
+    direct_vm.sender = direct_alice
+    try:
+        contract.location_register_profile("ACCRA_GH", "Accra", "Ghana", False, 0, False, 0, False, 0)
+    finally:
+        direct_vm.sender = owner
+
+    profile = contract.location_get_profile("ACCRA_GH")
+    assert profile["canonical_name"] == "Accra"
+    assert profile["country"] == "Ghana"
+
+
+def test_cannot_overwrite_an_existing_location(direct_deploy, direct_owner, direct_alice, direct_vm):
+    contract, owner = _deploy(direct_deploy, direct_owner)  # registers LAGOS_NG as "Lagos"/"Nigeria"
+
+    direct_vm.sender = direct_alice
+    try:
+        contract.location_register_profile("LAGOS_NG", "Hijacked", "Nowhere", False, 0, False, 0, False, 0)
+        assert False, "expected rejection of re-registering an existing location_id"
+    except Exception as exc:
+        assert "LOCATION_PROFILE_ALREADY_EXISTS" in str(exc)
+    finally:
+        direct_vm.sender = owner
+
+
 def test_policy_add_source_and_required_class(direct_deploy, direct_owner):
     contract, owner = _deploy(direct_deploy, direct_owner)
     contract.policy_register_source_policy("STRICT_V1", 2, 500, "FAIL_POLICY", "SKIP")

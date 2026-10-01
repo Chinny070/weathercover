@@ -117,9 +117,34 @@ export const coverPolicyExists = (policyId: string) => read<boolean>("cover_poli
 // Not owner-gated: any account can request an event or trigger resolution
 // on an already-configured location/source-policy pair, exactly like the
 // StudioNet verification runs performed with the genlayer CLI. Registering
-// NEW source policies/sources/locations remains an owner-only
-// infrastructure-setup action and is intentionally not exposed in this
-// end-user frontend.
+// a new source policy (which evidence sources are trusted) remains an
+// owner-only infrastructure-setup action, not exposed here. Registering a
+// new LOCATION is open to any caller, by product decision -- see
+// registerLocation below.
+
+export const registerLocation = (
+  client: AnyClient,
+  locationId: string,
+  canonicalName: string,
+  country: string,
+  hasCoordinates: boolean,
+  latHundredths: number,
+  latIsSouth: boolean,
+  lonHundredths: number,
+  lonIsWest: boolean,
+  radiusKm: number,
+) =>
+  write(client, "location_register_profile", [
+    locationId,
+    canonicalName,
+    country,
+    hasCoordinates,
+    latHundredths,
+    latIsSouth,
+    lonHundredths,
+    lonIsWest,
+    radiusKm,
+  ]);
 
 export const createWeatherEvent = (
   client: AnyClient,

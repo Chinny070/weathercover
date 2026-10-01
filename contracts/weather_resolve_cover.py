@@ -988,7 +988,11 @@ class WeatherResolveCover(gl.Contract):
         lon_is_west: bool,
         radius_km: u256,
     ) -> None:
-        self._require_owner()
+        # Open registration, by product decision: any caller may register a
+        # new location (not owner-gated like source policies, which govern
+        # which evidence sources are trusted). Collision-proof because a
+        # location_id can only ever be registered once (the EXISTS check
+        # below) -- nobody can overwrite or hijack an existing profile.
         _validate_bounded_text(location_id, 1, MAX_LOCATION_ID_LEN, "location_id")
         _require(self.location_profiles.get(location_id) is None, "EXPECTED:LOCATION_PROFILE_ALREADY_EXISTS")
         _validate_bounded_text(canonical_name, 1, MAX_CANONICAL_NAME_LEN, "canonical_name")
