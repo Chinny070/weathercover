@@ -69,7 +69,7 @@ These were explicitly out of scope for this release, not overlooked:
 - Additional weather metrics beyond `RAIN_24H` (architecture supports adding them later; none implemented).
 - Additional locations beyond whatever is registered on the deployed contract. Any caller can register a Location Resolution Profile through the frontend's Create Policy flow; source-policy configuration remains owner-controlled.
 - Real funds, escrow, or tokenized payouts of any kind — simulated integer balances only.
-- A frontend admin UI for registering source policies, sources, or locations — these remain owner-only `genlayer write` calls performed manually via the CLI, by design (see `PRODUCT_ARCHITECTURE.md` §26).
+- A frontend admin UI for registering source policies and sources — these remain owner-only `genlayer write` calls performed manually via the CLI. Location profiles can be registered by any caller through the Create Policy flow.
 - Splitting WeatherResolve and WeatherCover into two separately-deployed contracts — deferred until cross-contract-call patterns are independently verified (see `IMPLEMENTATION_PLAN.md` §1).
 - Automated or CI-driven deployment of any kind.
 - Any backend, database, or server-side component — the frontend reads/writes the contract directly from the browser.

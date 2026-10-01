@@ -20,8 +20,8 @@
 export const KNOWN_LOCATION_ID = "LAGOS_NG";
 export const KNOWN_METRIC = "RAIN_24H";
 
-/** A real, RESOLVED observation: 3 live Open-Meteo historical sources,
- * median 12.30mm, verified on the canonical StudioNet contract. */
+/** A real, RESOLVED observation: 3 model-specific Open-Meteo historical
+ * archive queries, median 12.30mm, verified on canonical StudioNet. */
 export const RESOLVED_DEMO_EVENT_ID = "3d603813dbd7ae98";
 export const RESOLVED_DEMO_SOURCE_POLICY_ID = "AUDIT_V1";
 export const RESOLVED_DEMO_OBSERVATION_DATE = "2026-08-30";

@@ -101,7 +101,7 @@ The user dashboard is **not** a trading-terminal-style dense grid (rejected the 
 Two visualization needs, two different treatments, both derived from the same graph-paper motif:
 
 1. **Process flow** (landing page, policy result timeline): vertical or horizontal node-and-connector diagram, Network Green lines, ink-colored nodes, each labeled in `mt-sans` — literally the source system's payment-flow diagram pattern repurposed for policy lifecycle.
-2. **Evidence comparison** (Evidence Explorer): a simple aligned table/grid on the faint graph-paper background — no charts, no gauges. Three real numbers (12.30mm / 10.50mm / 13.60mm) sitting close together *is* the visualization; the grid background makes their proximity (agreement) visually obvious without needing a bar chart. This is deliberately restrained — the brief warns against this looking like "a weather API dashboard," and a flashy chart would push it back in that direction.
+2. **Evidence comparison** (Evidence Explorer): a simple aligned table/grid on the faint graph-paper background — no charts, no gauges. The three current sample values (12.30mm / 10.40mm / 12.30mm) sit close together; the grid makes their agreement easy to scan without a bar chart. This is deliberately restrained — the brief warns against this looking like "a weather API dashboard," and a flashy chart would push it back in that direction.
 
 ---
 

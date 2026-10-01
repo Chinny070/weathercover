@@ -65,18 +65,19 @@ The lint command is now backed by the repository's ESLint 9 flat configuration (
 
 ## Live StudioNet re-verification (not just unit tests)
 
-Beyond the test suite, the active StudioNet contract (`0xFd7160411e5812bD873089368b1BF687e644a959`, see `docs/CANONICAL_DEPLOYMENT.md`) was directly re-queried to confirm every demo ID referenced in the frontend and docs actually exists and resolves as claimed. It was redeployed on 2026-10-01 to carry the numeric-consensus-binding fix. The newer location-evidence-field binding covered by this report is tested locally but requires a manual redeployment before it can be claimed as live.
+The source changes in this report passed the local test/build checks. Afterward, the owner manually deployed that source to the current canonical StudioNet contract (`0x35f33d089500d5554c803A201a19aEa9eD073022`) and the setup transactions/readbacks are recorded in `docs/CANONICAL_DEPLOYMENT.md`. The current live observation and policy outcomes were verified on this new address; the report below contains the final readback values.
 
 | Check | Result |
 |---|---|
 | `location_exists("LAGOS_NG")` | `true` |
 | `policy_exists("AUDIT_V1")` | `true` |
 | `policy_exists("AUDIT_UNRES_V1")` | `true` |
-| `event_exists` for the RESOLVED demo event (`3d603813dbd7ae98`) | `RESOLVED`, `value_mm100: 1230` |
-| `event_exists` for the UNRESOLVED demo event (`f96bbf7bf2a964ae`) | `UNRESOLVED`, `resolution_reason: INSUFFICIENT_SOURCES` |
+| `observation_get_observation("3d603813dbd7ae98")` | `RESOLVED`, `value_mm100: 1230`, 3 available sources, `SUFFICIENT`, reason `OK` |
+| `observation_get_observation("f96bbf7bf2a964ae")` | `UNRESOLVED`, `resolution_reason: INSUFFICIENT_SOURCES`, source rejected as `WRONG_LOCATION` |
 | `cover_get_policy("cover-1")` | `TRIGGERED`, `credited_amount: 1000` |
 | `cover_get_policy("cover-2")` | `NOT_TRIGGERED`, `credited_amount: 0` |
 | `cover_get_policy("cover-3")` | `UNRESOLVED`, `credited_amount: 0` |
+| `cover_get_simulated_balance(owner)` | `1000` |
 
 (`cover-2` and `cover-3` did not exist on the canonical contract before this remediation pass — see Issue 2 in the final summary. They were created and evaluated live as part of fixing that gap, not fabricated.)
 
@@ -86,4 +87,4 @@ Beyond the test suite, the active StudioNet contract (`0xFd7160411e5812bD8730893
 
 - **53/53 contract tests pass**, including 6 new adversarial/regression tests added in this pass.
 - **Frontend typecheck, lint, and build all exit successfully.** Lint reports two existing non-blocking dependency warnings.
-- **Every demo ID referenced anywhere in the repo exists and resolves as described** on the active StudioNet deployment. The new location-evidence-field binding remains a locally verified release candidate until manual redeployment.
+- **The canonical contract's demo IDs exist and resolve as described** on StudioNet; transaction-by-transaction setup evidence is in `docs/CANONICAL_DEPLOYMENT.md`.

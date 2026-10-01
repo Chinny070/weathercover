@@ -52,9 +52,9 @@ genlayer deploy --contract contracts/weather_resolve_cover.py --args <your_addre
 
 The CLI prints a `Transaction Hash` and a `Contract Address` on success. **Capture the Contract Address** — see §5.
 
-### 4a. Post-deploy infrastructure setup (owner-only, still manual)
+### 4a. Post-deploy infrastructure setup (location registration is open; source policy setup is owner-only)
 
-These are the same owner-only contract calls used throughout this project's own verification runs. Run them against your new contract address:
+Run these against your new contract address. Any caller may register a location profile; only the contract owner may register source policies or configure their sources.
 
 ```bash
 # Register a location (example: Lagos, Nigeria, with coordinates for coordinate-proximity matching)

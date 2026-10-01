@@ -8,7 +8,7 @@ This project's deployment workflow is, and remains, **manual and wallet-controll
 
 ## 1. Contract deployment (manual, owner-performed)
 
-Deployment is performed with the `genlayer` CLI against StudioNet, using an account already configured in the deployer's own local keystore (`genlayer account create` / `genlayer account import`, done once, outside any tool in this repo). No agent, script, or CI job in this project has ever generated, imported, or read a private key — every StudioNet deployment and transaction in this project's history was signed by the deployer's own already-configured CLI keystore.
+Deployment is performed with the `genlayer` CLI against StudioNet, using an account already configured in the deployer's own local keystore (`genlayer account create` / `genlayer account import`, done once, outside any tool in this repo). No agent, script, or CI job in this project has generated or imported a private key. StudioNet setup transactions in this project are signed by the project owner's configured CLI account.
 
 ```bash
 genlayer deploy --contract contracts/weather_resolve_cover.py --args <owner_address>
@@ -16,7 +16,7 @@ genlayer deploy --contract contracts/weather_resolve_cover.py --args <owner_addr
 
 This prints a `Contract Address`. That address is the one value the rest of this project needs.
 
-**Post-deploy setup** (also manual, also owner-signed — these are owner-only contract methods, see `contracts/weather_resolve_cover.py`):
+**Post-deploy setup** (manual, owner-signed for source policies and sources; location registration is open to any caller):
 
 ```bash
 # 1. Register a Location Resolution Profile (generic infra, no location hardcoded in code)
@@ -44,15 +44,15 @@ See `docs/CANONICAL_DEPLOYMENT.md` for the authoritative address record. As of t
 | Field | Value |
 |---|---|
 | Network | GenLayer StudioNet, chain ID `61999`, RPC `https://studio.genlayer.com/api` |
-| Contract address | `0xFd7160411e5812bD873089368b1BF687e644a959` |
-| Location profile | `LAGOS_NG` (canonical name "Lagos", country "Nigeria", coordinates 6.52°N/3.38°E, radius 50km) — open to any caller to register additional locations, see `contracts/weather_resolve_cover.py` `location_register_profile` |
-| Source policy (RESOLVED demo) | `AUDIT_V1` — 3 real Open-Meteo historical-archive sources, min 3, tolerance 3.50mm |
-| Resolved event | `3d603813dbd7ae98` — `LAGOS_NG`/`RAIN_24H`/`2026-08-30` → **RESOLVED**, 12.30mm |
-| Source policy (UNRESOLVED demo) | `AUDIT_UNRES_V1` — 1 source deliberately queried at the wrong coordinates |
-| Unresolved event | `f96bbf7bf2a964ae` — `LAGOS_NG`/`RAIN_24H`/`2026-08-25` → **UNRESOLVED**, `INSUFFICIENT_SOURCES` |
+| Contract address | `0x35f33d089500d5554c803A201a19aEa9eD073022` |
+| Location profile | `LAGOS_NG` (canonical name "Lagos", country "Nigeria", coordinates 6.52°N/3.38°E, radius 50km) — location registration is open to any caller |
+| Source policy (RESOLVED demo) | `AUDIT_V1` — three Open-Meteo historical archive model queries, min 3, tolerance 3.50mm |
+| Resolved event | `3d603813dbd7ae98` — `LAGOS_NG`/`RAIN_24H`/`2026-08-30` → **RESOLVED**, 12.30mm (12.30, 10.40, 12.30 inputs) |
+| Source policy (UNRESOLVED demo) | `AUDIT_UNRES_V1` — one source deliberately queried at coordinates outside the Lagos profile radius |
+| Unresolved event | `f96bbf7bf2a964ae` — `LAGOS_NG`/`RAIN_24H`/`2026-08-25` → **UNRESOLVED**, `INSUFFICIENT_SOURCES` (`WRONG_LOCATION`) |
 | Demo cover policies | `cover-1` (TRIGGERED), `cover-2` (NOT_TRIGGERED), `cover-3` (UNRESOLVED) |
 
-This is a disposable verification deployment, not a production instance. It exists so the frontend has real, independently-verifiable on-chain data to point at without anyone needing to re-run setup. All six rows above were independently re-verified live (not just copied forward) against this contract, redeployed on 2026-10-01 specifically to carry the numeric-consensus-binding fix from the final audit remediation pass (see `docs/CANONICAL_DEPLOYMENT.md`).
+This is the current manually deployed verification instance. Its configuration and demonstration data were recreated and read back on the new address; see `docs/CANONICAL_DEPLOYMENT.md` for transaction evidence. The three sources are model-specific queries from the same Open-Meteo archive provider, not three independent providers. The Vercel production frontend is now configured to use this contract.
 
 ---
 
@@ -62,7 +62,7 @@ The frontend never hardcodes a contract address as truth — it reads one enviro
 
 ```bash
 # frontend/.env.local (gitignored, never committed)
-NEXT_PUBLIC_CONTRACT_ADDRESS=0xFd7160411e5812bD873089368b1BF687e644a959
+NEXT_PUBLIC_CONTRACT_ADDRESS=0x35f33d089500d5554c803A201a19aEa9eD073022
 ```
 
 See `frontend/.env.example` for the template. To point the frontend at a different deployment (e.g. after a future manual redeploy), change only this value — no code change needed. `frontend/lib/genlayer/config.ts` reads it with a fallback to the address above, purely so local development has real data without any setup step.
@@ -97,7 +97,7 @@ All 53 direct-mode tests should pass. This exercises the full pipeline (event re
 ### 4b. Live StudioNet read check (no wallet needed)
 
 ```bash
-genlayer call 0xFd7160411e5812bD873089368b1BF687e644a959 observation_get_observation --args 3d603813dbd7ae98
+genlayer call 0x35f33d089500d5554c803A201a19aEa9eD073022 observation_get_observation --args 3d603813dbd7ae98
 ```
 
 Should return the RESOLVED Evidence Package with `value_mm100: 1230` and 3 `AVAILABLE` sources.

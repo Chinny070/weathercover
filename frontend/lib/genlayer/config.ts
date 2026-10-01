@@ -13,7 +13,7 @@ import { chains, createClient } from "genlayer-js";
  * docs/DEPLOYMENT.md and docs/CANONICAL_DEPLOYMENT.md.
  */
 export const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ??
-  "0xFd7160411e5812bD873089368b1BF687e644a959") as `0x${string}`;
+  "0x35f33d089500d5554c803A201a19aEa9eD073022") as `0x${string}`;
 
 export const STUDIONET_CHAIN_ID = 61999;
 export const STUDIONET_CHAIN_ID_HEX = "0xf22f";

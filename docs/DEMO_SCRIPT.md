@@ -1,6 +1,6 @@
 # Demo Script — 3-Minute Judge Walkthrough
 
-Live contract (canonical, see `docs/CANONICAL_DEPLOYMENT.md`): `0xFd7160411e5812bD873089368b1BF687e644a959` on GenLayer StudioNet. Every screen below shows real on-chain data, not a mock. See `docs/DEPLOYMENT.md` for exact commands if you want to reproduce any of it live during Q&A.
+Live contract (canonical, see `docs/CANONICAL_DEPLOYMENT.md`): `0x35f33d089500d5554c803A201a19aEa9eD073022` on GenLayer StudioNet. The setup and states below were read back from this deployment. See `docs/DEPLOYMENT.md` for setup and verification commands.
 
 Open these tabs before starting: `/`, `/observations/3d603813dbd7ae98`, `/policies/cover-1`, `/policies/cover-3`, `/dashboard`.
 
@@ -28,7 +28,7 @@ Scroll to the 5-step flow diagram: "Every policy follows this same path — noth
 
 Scroll to the evidence table.
 
-> "Three independent Open-Meteo historical queries. Each one was checked against a Location Resolution Profile — canonical name, aliases, country, **or coordinate proximity**, because real weather APIs never say 'Lagos' in their JSON, they just return coordinates. All three values agree within tolerance — 12.30, 10.50, 13.60mm — and GenLayer validators reached `MAJORITY_AGREE` on this evidence independently. This isn't one API call I'm asking you to trust."
+> "Three model-specific queries to Open-Meteo's historical archive returned 12.30, 10.40, and 12.30 mm. The contract checked the returned coordinates against the registered Lagos profile and checked the date before accepting each value. The median is 12.30 mm. These are multiple evidence queries from one provider, not independent weather providers."
 
 ### 1:45 – Create / evaluate policy
 
@@ -60,7 +60,7 @@ Point at the TRIGGERED result and the `+1000 simulated units` credit line.
 
 ## Verified payout lifecycle
 
-This is the exact mechanism behind "TRIGGERED → payout credited" in the 1:45–2:30 section above, spelled out as its own flow and independently re-verified live on the canonical StudioNet deployment (`0xFd7160411e5812bD873089368b1BF687e644a959`, see `docs/CANONICAL_DEPLOYMENT.md`) during the final audit remediation pass. Useful if a judge asks "how does the payout actually work" directly.
+This is the exact mechanism behind "TRIGGERED → payout credited" in the 1:45–2:30 section above, spelled out as its own flow and verified on the current canonical StudioNet deployment (`0x35f33d089500d5554c803A201a19aEa9eD073022`, see `docs/CANONICAL_DEPLOYMENT.md`). Useful if a judge asks "how does the payout actually work" directly.
 
 ```
 Observation resolved
