@@ -60,7 +60,7 @@ Run twice during this pass — once after the numeric-consensus-related frontend
 
 ## Live StudioNet re-verification (not just unit tests)
 
-Beyond the test suite, the canonical contract (`0x8a07659C329e1e1d865667A23745d472a696b073`, see `docs/CANONICAL_DEPLOYMENT.md`) was directly re-queried to confirm every demo ID referenced in the frontend and docs actually exists and resolves as claimed:
+Beyond the test suite, the canonical contract (`0xFd7160411e5812bD873089368b1BF687e644a959`, see `docs/CANONICAL_DEPLOYMENT.md`) was directly re-queried to confirm every demo ID referenced in the frontend and docs actually exists and resolves as claimed. Note: this address was redeployed on 2026-10-01, after this report's test-suite run, specifically to carry the numeric-consensus-binding fix (Issue 1) onto a live contract — the demo dataset below was recreated and re-verified on the new address, superseding `0x8a07659C329e1e1d865667A23745d472a696b073` (see `docs/CANONICAL_DEPLOYMENT.md`'s "Superseded addresses").
 
 | Check | Result |
 |---|---|

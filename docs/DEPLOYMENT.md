@@ -44,7 +44,7 @@ See `docs/CANONICAL_DEPLOYMENT.md` for the authoritative address record. As of t
 | Field | Value |
 |---|---|
 | Network | GenLayer StudioNet, chain ID `61999`, RPC `https://studio.genlayer.com/api` |
-| Contract address | `0x8a07659C329e1e1d865667A23745d472a696b073` |
+| Contract address | `0xFd7160411e5812bD873089368b1BF687e644a959` |
 | Location profile | `LAGOS_NG` (canonical name "Lagos", country "Nigeria", coordinates 6.52°N/3.38°E, radius 50km) — open to any caller to register additional locations, see `contracts/weather_resolve_cover.py` `location_register_profile` |
 | Source policy (RESOLVED demo) | `AUDIT_V1` — 3 real Open-Meteo historical-archive sources, min 3, tolerance 3.50mm |
 | Resolved event | `3d603813dbd7ae98` — `LAGOS_NG`/`RAIN_24H`/`2026-08-30` → **RESOLVED**, 12.30mm |
@@ -52,7 +52,7 @@ See `docs/CANONICAL_DEPLOYMENT.md` for the authoritative address record. As of t
 | Unresolved event | `f96bbf7bf2a964ae` — `LAGOS_NG`/`RAIN_24H`/`2026-08-25` → **UNRESOLVED**, `INSUFFICIENT_SOURCES` |
 | Demo cover policies | `cover-1` (TRIGGERED), `cover-2` (NOT_TRIGGERED), `cover-3` (UNRESOLVED) |
 
-This is a disposable verification deployment, not a production instance. It exists so the frontend has real, independently-verifiable on-chain data to point at without anyone needing to re-run setup. All six rows above were independently re-verified live (not just copied forward) as part of the final audit remediation pass.
+This is a disposable verification deployment, not a production instance. It exists so the frontend has real, independently-verifiable on-chain data to point at without anyone needing to re-run setup. All six rows above were independently re-verified live (not just copied forward) against this contract, redeployed on 2026-10-01 specifically to carry the numeric-consensus-binding fix from the final audit remediation pass (see `docs/CANONICAL_DEPLOYMENT.md`).
 
 ---
 
@@ -62,7 +62,7 @@ The frontend never hardcodes a contract address as truth — it reads one enviro
 
 ```bash
 # frontend/.env.local (gitignored, never committed)
-NEXT_PUBLIC_CONTRACT_ADDRESS=0x8a07659C329e1e1d865667A23745d472a696b073
+NEXT_PUBLIC_CONTRACT_ADDRESS=0xFd7160411e5812bD873089368b1BF687e644a959
 ```
 
 See `frontend/.env.example` for the template. To point the frontend at a different deployment (e.g. after a future manual redeploy), change only this value — no code change needed. `frontend/lib/genlayer/config.ts` reads it with a fallback to the address above, purely so local development has real data without any setup step.
@@ -97,7 +97,7 @@ All 47 direct-mode tests should pass. This exercises the full pipeline (event re
 ### 4b. Live StudioNet read check (no wallet needed)
 
 ```bash
-genlayer call 0x8a07659C329e1e1d865667A23745d472a696b073 observation_get_observation --args 3d603813dbd7ae98
+genlayer call 0xFd7160411e5812bD873089368b1BF687e644a959 observation_get_observation --args 3d603813dbd7ae98
 ```
 
 Should return the RESOLVED Evidence Package with `value_mm100: 1230` and 3 `AVAILABLE` sources.

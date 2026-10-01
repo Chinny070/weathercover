@@ -1,6 +1,6 @@
 # Demo Script — 3-Minute Judge Walkthrough
 
-Live contract (canonical, see `docs/CANONICAL_DEPLOYMENT.md`): `0x8a07659C329e1e1d865667A23745d472a696b073` on GenLayer StudioNet. Every screen below shows real on-chain data, not a mock. See `docs/DEPLOYMENT.md` for exact commands if you want to reproduce any of it live during Q&A.
+Live contract (canonical, see `docs/CANONICAL_DEPLOYMENT.md`): `0xFd7160411e5812bD873089368b1BF687e644a959` on GenLayer StudioNet. Every screen below shows real on-chain data, not a mock. See `docs/DEPLOYMENT.md` for exact commands if you want to reproduce any of it live during Q&A.
 
 Open these tabs before starting: `/`, `/observations/3d603813dbd7ae98`, `/policies/cover-1`, `/policies/cover-3`, `/dashboard`.
 
@@ -60,7 +60,7 @@ Point at the TRIGGERED result and the `+1000 simulated units` credit line.
 
 ## Verified payout lifecycle
 
-This is the exact mechanism behind "TRIGGERED → payout credited" in the 1:45–2:30 section above, spelled out as its own flow and independently re-verified live on the canonical StudioNet deployment (`0x8a07659C329e1e1d865667A23745d472a696b073`, see `docs/CANONICAL_DEPLOYMENT.md`) during the final audit remediation pass. Useful if a judge asks "how does the payout actually work" directly.
+This is the exact mechanism behind "TRIGGERED → payout credited" in the 1:45–2:30 section above, spelled out as its own flow and independently re-verified live on the canonical StudioNet deployment (`0xFd7160411e5812bD873089368b1BF687e644a959`, see `docs/CANONICAL_DEPLOYMENT.md`) during the final audit remediation pass. Useful if a judge asks "how does the payout actually work" directly.
 
 ```
 Observation resolved
@@ -83,7 +83,7 @@ Policy `cover-1`: `RAIN_24H BELOW 15.00mm` against a real resolved observation o
 | Step | Result |
 |---|---|
 | Observation resolved | `RESOLVED`, `value_mm100: 1230` |
-| Policy evaluated | `cover_evaluate_policy(cover-1)` — tx `0x18dbf98c1295a6e94b6850b1723a2804608a749faa01af039ebfa507688be84d`, `ACCEPTED`, `SUCCESS` |
+| Policy evaluated | `cover_evaluate_policy(cover-1)` — tx `0x7467699a4705d4a8a4faf7632661103c12320336665672cb6167bcaefcfa38d3`, `ACCEPTED` |
 | Result | `status: "TRIGGERED"` (1230 < 1500) |
 | Payout credited | `credited_amount: 1000` (== configured `simulated_payout`) |
 | Balance updated | simulated balance for the owner: `0 → 1000` |
@@ -95,7 +95,7 @@ Policy `cover-2`: `RAIN_24H BELOW 10.00mm` against the same `12.30mm` observatio
 | Step | Result |
 |---|---|
 | Observation resolved | `RESOLVED`, `value_mm100: 1230` |
-| Policy evaluated | `cover_evaluate_policy(cover-2)` — `ACCEPTED` (tx hash not individually logged in this pass; outcome confirmed by direct `cover_get_policy` read, same mechanism proven for cover-1 above) |
+| Policy evaluated | `cover_evaluate_policy(cover-2)` — tx `0x557b08c36e3e8e1d59ad53da1c40a0b3d39b0bad2a241c7fb1fe55de73b91f29`, `ACCEPTED` |
 | Result | `status: "NOT_TRIGGERED"` (1230 is not < 1000) |
 | Payout credited | `credited_amount: 0` |
 | Balance updated | unchanged — stayed at `1000` (from the TRIGGERED case above; a fresh wallet would stay at `0`) |
@@ -107,7 +107,7 @@ Policy `cover-3`: linked to an event whose only configured source was deliberate
 | Step | Result |
 |---|---|
 | Observation resolved | `UNRESOLVED`, `resolution_reason: "INSUFFICIENT_SOURCES"` |
-| Policy evaluated | `cover_evaluate_policy(cover-3)` — `ACCEPTED` (tx hash not individually logged in this pass; outcome confirmed by direct `cover_get_policy` read) |
+| Policy evaluated | `cover_evaluate_policy(cover-3)` — tx `0xac943d2ef438bc4201a0c3f0f9b963406c1508b2081ee7a901e0482a2f6e4ff4`, `ACCEPTED` |
 | Result | `status: "UNRESOLVED"` — no condition check is even attempted while the underlying observation isn't `RESOLVED` |
 | Payout credited | `credited_amount: 0` — no credit, no denial |
 | Balance updated | unchanged |
